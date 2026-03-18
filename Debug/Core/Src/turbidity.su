@@ -1,0 +1,2 @@
+../Core/Src/turbidity.c:12:6:check_turbidity	32	static
+../Core/Src/turbidity.c:37:7:turbidity_to_voltage	24	static

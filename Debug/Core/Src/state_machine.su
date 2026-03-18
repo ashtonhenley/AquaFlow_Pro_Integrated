@@ -1,0 +1,5 @@
+../Core/Src/state_machine.c:33:6:sched_curr_time	8	static
+../Core/Src/state_machine.c:52:6:update_schedule	32	static
+../Core/Src/state_machine.c:99:6:check_envir_flags	16	static
+../Core/Src/state_machine.c:106:6:is_flag_high	8	static
+../Core/Src/state_machine.c:125:6:handle_water_state	8	static

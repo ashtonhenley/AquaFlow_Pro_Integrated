@@ -1,0 +1,10 @@
+../Core/Src/physical_controls.c:13:6:outbound_pump_high	1
+../Core/Src/physical_controls.c:16:6:outbound_pump_low	1
+../Core/Src/physical_controls.c:19:6:inbound_pump_high	1
+../Core/Src/physical_controls.c:22:6:inbound_pump_low	1
+../Core/Src/physical_controls.c:25:6:heater_high	1
+../Core/Src/physical_controls.c:28:6:heater_low	1
+../Core/Src/physical_controls.c:31:6:fan_high	1
+../Core/Src/physical_controls.c:34:6:fan_low	1
+../Core/Src/physical_controls.c:37:6:circulating_pump_high	1
+../Core/Src/physical_controls.c:40:6:circulating_pump_low	1
