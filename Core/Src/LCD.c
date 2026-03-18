@@ -54,7 +54,6 @@ static void LCD_Write12Hour(uint8_t hours) {
 void LCD_SendCommand(uint8_t cmd) {
 	uint8_t buf[2] = { PREFIX, cmd };
 	HAL_I2C_Master_Transmit(&hi2c1, LCD_ADDR, buf, 2, HAL_MAX_DELAY);
-<<<<<<< HEAD
 	if (cmd == UNDERLINE_ON || cmd == UNDERLINE_OFF || cmd == CURSOR_HOME || cmd == CLEAR) HAL_Delay(2);
 }
 
@@ -100,61 +99,12 @@ void LCD_Init(void) {
 
 }
 
-void LCD_WriteCharacter(char c) {
-	HAL_I2C_Master_Transmit(&hi2c1, LCD_ADDR, (uint8_t*)&c, 1, HAL_MAX_DELAY);
-}
 
-=======
-	if (cmd == UNDERLINE_ON || cmd == UNDERLINE_OFF || cmd == CURSOR_HOME || cmd == CLEAR) HAL_Delay(2);
-}
-
-void LCD_SetContrast(uint8_t value) {
-	uint8_t buf[3] = { PREFIX, SET_CONTRAST, value };
-	HAL_I2C_Master_Transmit(&hi2c1, LCD_ADDR, buf, 3, HAL_MAX_DELAY);
-}
-
-void LCD_SetBrightness(uint8_t value) {
-	uint8_t buf[3] = { PREFIX, SET_BRIGHTNESS, value };
-	HAL_I2C_Master_Transmit(&hi2c1, LCD_ADDR, buf, 3, HAL_MAX_DELAY);
-}
-
-// Use a "simplified" argument pos with a value on the range [0, 79] - to be converted to the corresponding value within the given line's DDRAM address range
-void LCD_SetCursor(uint8_t pos) {
-
-	uint8_t convertedPos = pos;
-
-	// Line 1: no change (0 thru 19 = 0x00 thru 0x13)
-	// Line 2: map 20 thru 39 to 0x40 thru 0x53 (i.e. offset to 0x40 (= 64): 64 - 20 = 44)
-	if (pos >= 20 && pos <= 39) convertedPos += 44;
-	// Line 3: map 40 thru 59 to 0x14 thru 0x27 (i.e. offset to 0x14 (= 20): 20 - 40 = -20)
-	if (pos >= 40 && pos <= 59) convertedPos -= 20;
-	// Line 4: map 60 thru 79 to 0x54 thru 0x67 (i.e. offset to 0x54 (= 84): 84 - 60 = 24)
-	if (pos >= 60 && pos <= 79) convertedPos += 24;
-
-	uint8_t buf[3] = { PREFIX, SET_CURSOR, convertedPos };
-	HAL_I2C_Master_Transmit(&hi2c1, LCD_ADDR, buf, 3, HAL_MAX_DELAY);
-}
-
-// Initialization
-void LCD_Init(void) {
-
-	HAL_Delay(105); // If initialization is to be done just after power-on, wait (at least) 100 ms before issuing any commands
-
-	// Arbitrary specified starting contrast/brightness combination
-	LCD_SetContrast(30);
-	LCD_SetBrightness(5);
-
-	LCD_SendCommand(DISPLAY_ON);
-	LCD_SendCommand(CLEAR);
-	LCD_SetCursor(0x00); // Set cursor (to 0x00 = R1C1) prior to sending of text so that the DDRAM address doesn't remain undefined (following power-on)
-
-}
 
 void LCD_WriteCharacter(char c) {
 	HAL_I2C_Master_Transmit(&hi2c1, LCD_ADDR, (uint8_t*)&c, 1, HAL_MAX_DELAY);
 }
 
->>>>>>> 670e59b84ccaad7644e1fe98754626574f614a25
 void LCD_WriteString(const char* str) {
 	HAL_I2C_Master_Transmit(&hi2c1, LCD_ADDR, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
 }
