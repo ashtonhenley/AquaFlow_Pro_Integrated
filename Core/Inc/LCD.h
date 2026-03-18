@@ -25,16 +25,16 @@ void LCD_SetBrightness(uint8_t value);
 void LCD_SetCursor(uint8_t pos);
 void LCD_Init(void);
 void LCD_WriteCharacter(char c);
-void LCD_WriteString(char* str);
-void LCD_ShowIdleOverview(char* tank_temp, char* turbidity, char* ph_value);
+void LCD_WriteString(const char* str);
+void LCD_ShowIdleOverview(const char* tank_temp, const char* turbidity, const char* ph_value);
 void LCD_ShowIdleCurrentTime(uint8_t month, uint8_t day, uint8_t hours, uint8_t minutes);
 void LCD_ShowIdleScheduledTime(uint8_t month, uint8_t day, uint8_t hours);
 void LCD_ShowReservoirCheckScreen(void);
-void LCD_ShowReservoirProgress(char* progress);
+void LCD_ShowReservoirProgress(const char* progress);
 void LCD_ShowDrainScreen(uint8_t estimate_seconds);
 void LCD_ShowHeatingScreen(void);
-void LCD_ShowHeatingTemps(char* reservoir_temp, char* tank_temp);
+void LCD_ShowHeatingTemps(const char* reservoir_temp, const char* tank_temp);
 void LCD_ShowFillScreen(uint8_t estimate_seconds);
-void LCD_ShowElapsedTime(char* elapsed_time);
+void LCD_ShowElapsedTime(const char* elapsed_time);
 
 #endif // INC_LCD_H_

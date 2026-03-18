@@ -41,7 +41,7 @@ static void LCD_Write12Hour(uint8_t hours) {
 	char hr_buf[3];
 
 	if (hr == 0u) {
-		LCD_WriteString((char*)"12");
+		LCD_WriteString("12");
 		return;
 	}
 
@@ -103,26 +103,26 @@ void LCD_WriteCharacter(char c) {
 	HAL_I2C_Master_Transmit(&hi2c1, LCD_ADDR, (uint8_t*)&c, 1, HAL_MAX_DELAY);
 }
 
-void LCD_WriteString(char* str) {
+void LCD_WriteString(const char* str) {
 	HAL_I2C_Master_Transmit(&hi2c1, LCD_ADDR, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
 }
 
-void LCD_ShowIdleOverview(char* tank_temp, char* turbidity, char* ph_value) {
+void LCD_ShowIdleOverview(const char* tank_temp, const char* turbidity, const char* ph_value) {
 	LCD_SendCommand(CLEAR);
 
-	LCD_WriteString((char*)"TMPMAIN   ");
+	LCD_WriteString("TMPMAIN   ");
 	LCD_WriteString(tank_temp);
 	LCD_WriteCharacter(' ');
 	LCD_WriteCharacter(DEG);
 	LCD_WriteCharacter('F');
 
 	LCD_SetCursor(20);
-	LCD_WriteString((char*)"TRBDTY    ");
+	LCD_WriteString("TRBDTY    ");
 	LCD_WriteString(turbidity);
-	LCD_WriteString((char*)" NTU");
+	LCD_WriteString(" NTU");
 
 	LCD_SetCursor(40);
-	LCD_WriteString((char*)"PH        ");
+	LCD_WriteString("PH        ");
 	LCD_WriteString(ph_value);
 }
 
@@ -130,7 +130,7 @@ void LCD_ShowIdleCurrentTime(uint8_t month, uint8_t day, uint8_t hours, uint8_t 
 	char buf[3];
 
 	LCD_SetCursor(60);
-	LCD_WriteString((char*)"   ");
+	LCD_WriteString("   ");
 
 	snprintf(buf, sizeof(buf), "%02u", month);
 	LCD_WriteString(buf);
@@ -146,14 +146,14 @@ void LCD_ShowIdleCurrentTime(uint8_t month, uint8_t day, uint8_t hours, uint8_t 
 	snprintf(buf, sizeof(buf), "%02u", minutes);
 	LCD_WriteString(buf);
 	LCD_WriteCharacter(' ');
-	LCD_WriteString((hours < 12u) ? (char*)"AM" : (char*)"PM");
+	LCD_WriteString((hours < 12u) ? "AM" : "PM");
 }
 
 void LCD_ShowIdleScheduledTime(uint8_t month, uint8_t day, uint8_t hours) {
 	char buf[3];
 
 	LCD_SetCursor(60);
-	LCD_WriteString((char*)"SCHEDULED ");
+	LCD_WriteString("SCHEDULED ");
 
 	snprintf(buf, sizeof(buf), "%02u", month);
 	LCD_WriteString(buf);
@@ -164,19 +164,19 @@ void LCD_ShowIdleScheduledTime(uint8_t month, uint8_t day, uint8_t hours) {
 	LCD_WriteCharacter(' ');
 
 	LCD_Write12Hour(hours);
-	LCD_WriteString((hours < 12u) ? (char*)"AM" : (char*)"PM");
+	LCD_WriteString((hours < 12u) ? "AM" : "PM");
 }
 
 void LCD_ShowReservoirCheckScreen(void) {
 	LCD_SendCommand(CLEAR);
-	LCD_WriteString((char*)"CHANGING: RESCHECK");
+	LCD_WriteString("CHANGING: RESCHECK");
 	LCD_SetCursor(20);
-	LCD_WriteString((char*)"TARGET    1 gal");
+	LCD_WriteString("TARGET    1 gal");
 }
 
-void LCD_ShowReservoirProgress(char* progress) {
+void LCD_ShowReservoirProgress(const char* progress) {
 	LCD_SetCursor(40);
-	LCD_WriteString((char*)"PROGRESS  ");
+	LCD_WriteString("PROGRESS  ");
 	LCD_WriteString(progress);
 	LCD_WriteCharacter('%');
 }
@@ -185,32 +185,32 @@ void LCD_ShowDrainScreen(uint8_t estimate_seconds) {
 	char buf[4];
 
 	LCD_SendCommand(CLEAR);
-	LCD_WriteString((char*)"CHANGING: DRAIN");
+	LCD_WriteString("CHANGING: DRAIN");
 	LCD_SetCursor(20);
-	LCD_WriteString((char*)"TARGET    1 gal");
+	LCD_WriteString("TARGET    1 gal");
 	LCD_SetCursor(40);
-	LCD_WriteString((char*)"ESTIMATE  ");
+	LCD_WriteString("ESTIMATE  ");
 	snprintf(buf, sizeof(buf), "%u", estimate_seconds);
 	LCD_WriteString(buf);
-	LCD_WriteString((char*)" sec");
+	LCD_WriteString(" sec");
 	LCD_SetCursor(60);
-	LCD_WriteString((char*)"ELAPSED         sec");
+	LCD_WriteString("ELAPSED         sec");
 }
 
 void LCD_ShowHeatingScreen(void) {
 	LCD_SendCommand(CLEAR);
-	LCD_WriteString((char*)"CHANGING: HEATING");
+	LCD_WriteString("CHANGING: HEATING");
 	LCD_SetCursor(20);
-	LCD_WriteString((char*)"TEMPRES          ");
+	LCD_WriteString("TEMPRES          ");
 	LCD_WriteCharacter(DEG);
 	LCD_WriteCharacter('F');
 	LCD_SetCursor(40);
-	LCD_WriteString((char*)"TEMPMAIN        ");
+	LCD_WriteString("TEMPMAIN        ");
 	LCD_WriteCharacter(DEG);
 	LCD_WriteCharacter('F');
 }
 
-void LCD_ShowHeatingTemps(char* reservoir_temp, char* tank_temp) {
+void LCD_ShowHeatingTemps(const char* reservoir_temp, const char* tank_temp) {
 	LCD_SetCursor(30);
 	LCD_WriteString(reservoir_temp);
 	LCD_SetCursor(50);
@@ -221,19 +221,19 @@ void LCD_ShowFillScreen(uint8_t estimate_seconds) {
 	char buf[4];
 
 	LCD_SendCommand(CLEAR);
-	LCD_WriteString((char*)"CHANGING: FILL");
+	LCD_WriteString("CHANGING: FILL");
 	LCD_SetCursor(20);
-	LCD_WriteString((char*)"TARGET    1 gal");
+	LCD_WriteString("TARGET    1 gal");
 	LCD_SetCursor(40);
-	LCD_WriteString((char*)"ESTIMATE  ");
+	LCD_WriteString("ESTIMATE  ");
 	snprintf(buf, sizeof(buf), "%u", estimate_seconds);
 	LCD_WriteString(buf);
-	LCD_WriteString((char*)" sec");
+	LCD_WriteString(" sec");
 	LCD_SetCursor(60);
-	LCD_WriteString((char*)"ELAPSED         sec");
+	LCD_WriteString("ELAPSED         sec");
 }
 
-void LCD_ShowElapsedTime(char* elapsed_time) {
+void LCD_ShowElapsedTime(const char* elapsed_time) {
 	LCD_SetCursor(70);
 	LCD_WriteString(elapsed_time);
 }
