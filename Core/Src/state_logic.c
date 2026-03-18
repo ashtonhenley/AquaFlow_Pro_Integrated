@@ -105,6 +105,9 @@ uint32_t get_seconds_of_day(void)
 void idle_state(){
 
 	static uint32_t idle_sod = 0;
+	bool time_reached;
+	char temp_buf[6];
+	char ph_buf[6];
 	// Initialize range values for fan
 
 	if(state_entry){
@@ -112,10 +115,9 @@ void idle_state(){
 		idle_sod = get_seconds_of_day();
 		FAN_ON_TEMP = rangevalues.max_temp;
 		FAN_OFF_TEMP = rangevalues.max_temp - 2;
-		state_leave();
 	}
 	// Check... have we reached our time?
-	bool time_reached = timer_expired(
+	time_reached = timer_expired(
 			idle_sod,
 			1u,     // Time in seconds that determines the interval of time_reached, also controls how often we sample sensors
 			curr_date_time.hours,
@@ -132,10 +134,20 @@ void idle_state(){
 		}
 
 		num_to_char_4(sensorvalues.temperature_tank);
-		char temp_buf[6] = {XXdXX[0], XXdXX[1], XXdXX[2], XXdXX[3], XXdXX[4], '\0'};
+		temp_buf[0] = XXdXX[0];
+		temp_buf[1] = XXdXX[1];
+		temp_buf[2] = XXdXX[2];
+		temp_buf[3] = XXdXX[3];
+		temp_buf[4] = XXdXX[4];
+		temp_buf[5] = '\0';
 		num_to_char_2(sensorvalues.turbidity_value);
 		num_to_char_4(sensorvalues.ph_value);
-		char ph_buf[6] = {XXdXX[0], XXdXX[1], XXdXX[2], XXdXX[3], XXdXX[4], '\0'};
+		ph_buf[0] = XXdXX[0];
+		ph_buf[1] = XXdXX[1];
+		ph_buf[2] = XXdXX[2];
+		ph_buf[3] = XXdXX[3];
+		ph_buf[4] = XXdXX[4];
+		ph_buf[5] = '\0';
 		LCD_ShowIdleOverview(temp_buf, XX, ph_buf);
 
 		menuExit = 0;
@@ -212,6 +224,7 @@ void water_res_state(){
 	}
 	if (keypadIter > 165) { // 166 ms (1/6 sec) between refreshes
 		num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f)); // Percentage = 100 * level/30
+		// This value above should already be a percentage *** CHECK
 		LCD_ShowReservoirProgress(XX);
 		keypadIter = 0;
 	}
@@ -225,6 +238,8 @@ void water_res_state(){
 
 void water_drain_state(){
 	static uint32_t drain_sod = 0;
+	bool time_reached;
+	char elapsed_buf[6];
 
 	if (state_entry)
 	{
@@ -244,7 +259,12 @@ void water_drain_state(){
 	if (keypadIter > 165) {
 		estTime += 0.1666f;
 		num_to_char_4(estTime);
-		char elapsed_buf[6] = {XXdXX[0], XXdXX[1], XXdXX[2], XXdXX[3], XXdXX[4], '\0'};
+		elapsed_buf[0] = XXdXX[0];
+		elapsed_buf[1] = XXdXX[1];
+		elapsed_buf[2] = XXdXX[2];
+		elapsed_buf[3] = XXdXX[3];
+		elapsed_buf[4] = XXdXX[4];
+		elapsed_buf[5] = '\0';
 		LCD_ShowElapsedTime(elapsed_buf);
 		keypadIter = 0;
 	}
@@ -254,7 +274,7 @@ void water_drain_state(){
 		read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 
 		// Check to see if flow rate in seconds has been reached
-		bool time_reached = timer_expired(
+		time_reached = timer_expired(
 				drain_sod,
 				flow_rate,
 				curr_date_time.hours,
@@ -276,6 +296,8 @@ void water_drain_state(){
 }
 
 void heating_state(){
+	char temp_res[6];
+	char temp_tank[6];
 	// Sample both temperature sensors
 	sample_temperature_sensors();
 	if (state_entry) {
@@ -285,9 +307,19 @@ void heating_state(){
 	}
 	if (keypadIter > 999) {
 		num_to_char_4(sensorvalues.temperature_res);
-		char temp_res[6] = {XXdXX[0], XXdXX[1], XXdXX[2], XXdXX[3], XXdXX[4], '\0'};
+		temp_res[0] = XXdXX[0];
+		temp_res[1] = XXdXX[1];
+		temp_res[2] = XXdXX[2];
+		temp_res[3] = XXdXX[3];
+		temp_res[4] = XXdXX[4];
+		temp_res[5] = '\0';
 		num_to_char_4(sensorvalues.temperature_tank);
-		char temp_tank[6] = {XXdXX[0], XXdXX[1], XXdXX[2], XXdXX[3], XXdXX[4], '\0'};
+		temp_tank[0] = XXdXX[0];
+		temp_tank[1] = XXdXX[1];
+		temp_tank[2] = XXdXX[2];
+		temp_tank[3] = XXdXX[3];
+		temp_tank[4] = XXdXX[4];
+		temp_tank[5] = '\0';
 		LCD_ShowHeatingTemps(temp_res, temp_tank);
 		keypadIter = 0;
 	}
@@ -319,6 +351,7 @@ void heating_state(){
 }
 
 void water_fill_state(){
+	char elapsed_buf[6];
 	// Only perform these commands once
 	if (state_entry)
 	{
@@ -336,7 +369,12 @@ void water_fill_state(){
 	if (keypadIter > 165) {
 		estTime += 0.1666f;
 		num_to_char_4(estTime);
-		char elapsed_buf[6] = {XXdXX[0], XXdXX[1], XXdXX[2], XXdXX[3], XXdXX[4], '\0'};
+		elapsed_buf[0] = XXdXX[0];
+		elapsed_buf[1] = XXdXX[1];
+		elapsed_buf[2] = XXdXX[2];
+		elapsed_buf[3] = XXdXX[3];
+		elapsed_buf[4] = XXdXX[4];
+		elapsed_buf[5] = '\0';
 		LCD_ShowElapsedTime(elapsed_buf);
 		keypadIter = 0;
 	}
