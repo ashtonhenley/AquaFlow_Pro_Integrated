@@ -51,8 +51,6 @@ float FAN_ON_TEMP;
 float FAN_OFF_TEMP;
 static bool fan_on = 0;
 
-
-#define DEG 0xDF
 extern uint8_t schedule;
 
 extern bool manualStartFlag;
@@ -133,25 +131,12 @@ void idle_state(){
 			screenSwitch = 0;
 		}
 
-		LCD_SendCommand(CLEAR);
-
-		LCD_WriteString("TMPMAIN   ");
 		num_to_char_4(sensorvalues.temperature_tank);
-		LCD_WriteString(XXdXX);
-		LCD_WriteCharacter(' ');
-		LCD_WriteCharacter(DEG);
-		LCD_WriteCharacter('F');
-
-		LCD_SetCursor(20);
-		LCD_WriteString("TRBDTY    ");
+		char temp_buf[6] = {XXdXX[0], XXdXX[1], XXdXX[2], XXdXX[3], XXdXX[4], '\0'};
 		num_to_char_2(sensorvalues.turbidity_value);
-		LCD_WriteString(XX);
-		LCD_WriteString(" NTU");
-
-		LCD_SetCursor(40);
-		LCD_WriteString("PH        ");
 		num_to_char_4(sensorvalues.ph_value);
-		LCD_WriteString(XXdXX);
+		char ph_buf[6] = {XXdXX[0], XXdXX[1], XXdXX[2], XXdXX[3], XXdXX[4], '\0'};
+		LCD_ShowIdleOverview(temp_buf, XX, ph_buf);
 
 		menuExit = 0;
 		state_entry = 0;
@@ -159,44 +144,21 @@ void idle_state(){
 	}
 
 	if (keypadIter > 4999) { // 5 sec between each screen refresh
-		LCD_SetCursor(60);
-		uint8_t hr;
 		switch (screenSwitch) {
 		case 0: // Current time: 	|   XX/XX XX:XX XM   |
-
-			LCD_WriteString("   ");
-			num_to_char_2(curr_date_time.month);
-			LCD_WriteString(XX);
-			LCD_WriteCharacter('/');
-			num_to_char_2(curr_date_time.day);
-			LCD_WriteString(XX);
-			LCD_WriteCharacter(' ');
-			hr = curr_date_time.hours % 12;
-			if (hr == 0) LCD_WriteString("12");
-			else num_to_char_2(hr);
-			LCD_WriteString(XX);
-			LCD_WriteCharacter(':');
-			num_to_char_2(curr_date_time.minutes);
-			LCD_WriteString(XX);
-			LCD_WriteCharacter(' ');
-			if (curr_date_time.hours < 12) LCD_WriteString("AM");
-			else LCD_WriteString("PM");
+			LCD_ShowIdleCurrentTime(
+				curr_date_time.month,
+				curr_date_time.day,
+				curr_date_time.hours,
+				curr_date_time.minutes
+			);
 			break;
 		case 1: // Scheduled time:	|SCHEDULED XX/XX XXXM|
-
-			LCD_WriteString("SCHEDULED ");
-			num_to_char_2(sched_date_time.month);
-			LCD_WriteString(XX);
-			LCD_WriteCharacter('/');
-			num_to_char_2(sched_date_time.day);
-			LCD_WriteString(XX);
-			LCD_WriteCharacter(' ');
-			hr = sched_date_time.hours % 12;
-			if (hr == 0) LCD_WriteString("12");
-			else num_to_char_2(hr);
-			LCD_WriteString(XX);
-			if (sched_date_time.hours < 12) LCD_WriteString("AM");
-			else LCD_WriteString("PM");
+			LCD_ShowIdleScheduledTime(
+				sched_date_time.month,
+				sched_date_time.day,
+				sched_date_time.hours
+			);
 			break;
 		}
 		keypadIter = 0;
@@ -241,10 +203,7 @@ void water_res_state(){
 	read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 
 	if (state_entry) {
-		LCD_SendCommand(CLEAR);
-		LCD_WriteString("CHANGING: RESCHECK");
-		LCD_SetCursor(20);
-		LCD_WriteString("TARGET    1 gal");
+		LCD_ShowReservoirCheckScreen();
 		// Need to implement a waiting phase if we're out of range.
 
 		state_entry = 0;
@@ -252,11 +211,8 @@ void water_res_state(){
 		state_entry = 0;
 	}
 	if (keypadIter > 165) { // 166 ms (1/6 sec) between refreshes
-		LCD_SetCursor(40);
-		LCD_WriteString("PROGRESS  ");
 		num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f)); // Percentage = 100 * level/30
-		LCD_WriteString(XX);
-		LCD_WriteCharacter('%');
+		LCD_ShowReservoirProgress(XX);
 		keypadIter = 0;
 	}
 	// If water level is sufficient (30%), move to water drain state
@@ -273,14 +229,7 @@ void water_drain_state(){
 	if (state_entry)
 	{
 		// Set outbound pump high
-		LCD_SendCommand(CLEAR);
-		LCD_WriteString("CHANGING: DRAIN");
-		LCD_SetCursor(20);
-		LCD_WriteString("TARGET    1 gal");
-		LCD_SetCursor(40);
-		LCD_WriteString("ESTIMATE  21 sec");
-		LCD_SetCursor(60);
-		LCD_WriteString("ELAPSED         sec");
+		LCD_ShowDrainScreen(flow_rate);
 		outbound_pump_high();
 
 		// Get start time of outbound pump
@@ -295,8 +244,8 @@ void water_drain_state(){
 	if (keypadIter > 165) {
 		estTime += 0.1666f;
 		num_to_char_4(estTime);
-		LCD_SetCursor(70);
-		LCD_WriteString(XXdXX);
+		char elapsed_buf[6] = {XXdXX[0], XXdXX[1], XXdXX[2], XXdXX[3], XXdXX[4], '\0'};
+		LCD_ShowElapsedTime(elapsed_buf);
 		keypadIter = 0;
 	}
 	if (state_entry == 0)
@@ -332,24 +281,14 @@ void heating_state(){
 	if (state_entry) {
 		state_entry = 0;
 		keypadIter = 1000;
-		LCD_SendCommand(CLEAR);
-		LCD_WriteString("CHANGING: HEATING");
-		LCD_SetCursor(20);
-		LCD_WriteString("TEMPRES          ");
-		LCD_WriteCharacter(DEG);
-		LCD_WriteCharacter('F');
-		LCD_SetCursor(40);
-		LCD_WriteString("TEMPMAIN        ");
-		LCD_WriteCharacter(DEG);
-		LCD_WriteCharacter('F');
+		LCD_ShowHeatingScreen();
 	}
 	if (keypadIter > 999) {
-		LCD_SetCursor(30);
 		num_to_char_4(sensorvalues.temperature_res);
-		LCD_WriteString(XXdXX);
-		LCD_SetCursor(50);
+		char temp_res[6] = {XXdXX[0], XXdXX[1], XXdXX[2], XXdXX[3], XXdXX[4], '\0'};
 		num_to_char_4(sensorvalues.temperature_tank);
-		LCD_WriteString(XXdXX);
+		char temp_tank[6] = {XXdXX[0], XXdXX[1], XXdXX[2], XXdXX[3], XXdXX[4], '\0'};
+		LCD_ShowHeatingTemps(temp_res, temp_tank);
 		keypadIter = 0;
 	}
 	// Calculate the difference between the two temperatures
@@ -387,14 +326,7 @@ void water_fill_state(){
 		keypadIter = 0;
 		estTime = 0;
 
-		LCD_SendCommand(CLEAR);
-		LCD_WriteString("CHANGING: FILL");
-		LCD_SetCursor(20);
-		LCD_WriteString("TARGET    1 gal");
-		LCD_SetCursor(40);
-		LCD_WriteString("ESTIMATE  21 sec");
-		LCD_SetCursor(60);
-		LCD_WriteString("ELAPSED         sec");
+		LCD_ShowFillScreen(flow_rate);
 		inbound_pump_high();
 
 		fill_start_sod = get_seconds_of_day();
@@ -404,8 +336,8 @@ void water_fill_state(){
 	if (keypadIter > 165) {
 		estTime += 0.1666f;
 		num_to_char_4(estTime);
-		LCD_SetCursor(70);
-		LCD_WriteString(XXdXX);
+		char elapsed_buf[6] = {XXdXX[0], XXdXX[1], XXdXX[2], XXdXX[3], XXdXX[4], '\0'};
+		LCD_ShowElapsedTime(elapsed_buf);
 		keypadIter = 0;
 	}
 	// Compute time once per loop
