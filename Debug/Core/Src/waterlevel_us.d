@@ -37,8 +37,6 @@ Core/Src/waterlevel_us.o: ../Core/Src/waterlevel_us.c \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_tim_ex.h \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart.h \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart_ex.h \
- ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_usart.h \
- ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_usart_ex.h \
  ../Core/Inc/main.h
 ../Core/Inc/waterlevel_us.h:
 ../Core/Inc/main.h:
@@ -79,6 +77,4 @@ Core/Src/waterlevel_us.o: ../Core/Src/waterlevel_us.c \
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_tim_ex.h:
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart.h:
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart_ex.h:
-../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_usart.h:
-../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_usart_ex.h:
 ../Core/Inc/main.h:

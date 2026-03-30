@@ -6,8 +6,8 @@
 ../Core/Src/main.c:596:13:MX_USART1_UART_Init	5
 ../Core/Src/main.c:644:13:MX_USART2_UART_Init	5
 ../Core/Src/main.c:692:13:MX_USART3_UART_Init	5
-../Core/Src/main.c:740:13:MX_USART5_Init	2
-../Core/Src/main.c:776:13:MX_USART6_Init	2
+../Core/Src/main.c:740:13:MX_USART5_UART_Init	2
+../Core/Src/main.c:776:13:MX_USART6_UART_Init	2
 ../Core/Src/main.c:810:13:MX_DMA_Init	1
 ../Core/Src/main.c:823:13:MX_GPIO_Init	1
 ../Core/Src/main.c:891:6:blockForKey	4

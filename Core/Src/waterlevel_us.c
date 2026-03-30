@@ -13,8 +13,8 @@ const uint8_t HEADER_BYTE = 0xFF;
 const uint16_t READ_TIMEOUT_MS = 200;
 const int ERROR_DISTANCE = -1;  // Error return value
 
-extern UART_HandleTypeDef husart5;
-extern UART_HandleTypeDef husart6;
+extern UART_HandleTypeDef huart5;
+extern UART_HandleTypeDef huart6;
 
 size_t readN(UART_HandleTypeDef *huart, uint8_t *buf, size_t len)
 {
@@ -69,16 +69,16 @@ int wl_get_distance(UART_HandleTypeDef *huart){
 }
 
 void read_water_level(int *waterlevel_res, int *waterlevel_tank){
-	int tmp_wl_res = wl_get_distance(&husart5);
-	int tmp_wl_tank = wl_get_distance(&husart6);
+	int tmp_wl_res = wl_get_distance(&huart5);
+	int tmp_wl_tank = wl_get_distance(&huart6);
 
 	// Keep last valid value
 	if(tmp_wl_res != ERROR_DISTANCE){
-		*waterlevel_res = tmp_wl_res / 1000; // value in cm
+		*waterlevel_res = tmp_wl_res / 10; // value in cm
 	}
 
 	if(tmp_wl_tank != ERROR_DISTANCE){
-		*waterlevel_tank = tmp_wl_tank / 1000; // value in cm
+		*waterlevel_tank = tmp_wl_tank / 10; // value in cm
 	}
 
 
