@@ -27,25 +27,25 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  11 .ARM.attributes 00000028  00000000  00000000  0000f0ac  2**0
                   CONTENTS, READONLY
- 12 .debug_info   0001cebb  00000000  00000000  0000f0d4  2**0
+ 12 .debug_info   0001ceee  00000000  00000000  0000f0d4  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 13 .debug_abbrev 00004183  00000000  00000000  0002bf8f  2**0
+ 13 .debug_abbrev 00004183  00000000  00000000  0002bfc2  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_aranges 000019f8  00000000  00000000  00030118  2**3
+ 14 .debug_aranges 000019f8  00000000  00000000  00030148  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_rnglists 00001429  00000000  00000000  00031b10  2**0
+ 15 .debug_rnglists 00001429  00000000  00000000  00031b40  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  00020983  00000000  00000000  00032f39  2**0
+ 16 .debug_macro  00020983  00000000  00000000  00032f69  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0002027d  00000000  00000000  000538bc  2**0
+ 17 .debug_line   0002028e  00000000  00000000  000538ec  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    000cb556  00000000  00000000  00073b39  2**0
+ 18 .debug_str    000cb588  00000000  00000000  00073b7a  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000043  00000000  00000000  0013f08f  2**0
+ 19 .comment      00000043  00000000  00000000  0013f102  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  000066a8  00000000  00000000  0013f0d4  2**2
+ 20 .debug_frame  000066a8  00000000  00000000  0013f148  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 21 .debug_line_str 000000b1  00000000  00000000  0014577c  2**0
+ 21 .debug_line_str 000000b1  00000000  00000000  001457f0  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -9542,9 +9542,9 @@ int main(void)
  80047d8:	4bda      	ldr	r3, [pc, #872]	@ (8004b44 <main+0x3bc>)
  80047da:	0018      	movs	r0, r3
  80047dc:	f003 fb70 	bl	8007ec0 <HAL_ADCEx_Calibration_Start>
-	//DS3231_SetDate(12);
-	//DS3231_SetHour(13);
-	//DS3231_SetMinute(56);
+	//DS3231_SetDate(2);
+	//DS3231_SetHour(14);
+	//DS3231_SetMinute(54);
 	//DS3231_SetSecond(0);
 	// Initalize external GPIO
 	MCP23017_Init(&htd);
@@ -13125,24 +13125,24 @@ void water_res_state(){
  8005dd0:	801a      	strh	r2, [r3, #0]
 	}
 	// If water level is sufficient (30%), move to water drain state
-	if (sensorvalues.waterlevel_res > 30)
+	if (sensorvalues.waterlevel_res > minimum_res_val)
  8005dd2:	4b0a      	ldr	r3, [pc, #40]	@ (8005dfc <water_res_state+0x94>)
  8005dd4:	689b      	ldr	r3, [r3, #8]
- 8005dd6:	2b1e      	cmp	r3, #30
- 8005dd8:	dd04      	ble.n	8005de4 <water_res_state+0x7c>
+ 8005dd6:	2205      	movs	r2, #5
+ 8005dd8:	4293      	cmp	r3, r2
+ 8005dda:	dd04      	ble.n	8005de6 <water_res_state+0x7e>
 	{
 		current_state = AQUA_DRAIN_STATE;
- 8005dda:	4b0b      	ldr	r3, [pc, #44]	@ (8005e08 <water_res_state+0xa0>)
- 8005ddc:	2203      	movs	r2, #3
- 8005dde:	701a      	strb	r2, [r3, #0]
+ 8005ddc:	4b0a      	ldr	r3, [pc, #40]	@ (8005e08 <water_res_state+0xa0>)
+ 8005dde:	2203      	movs	r2, #3
+ 8005de0:	701a      	strb	r2, [r3, #0]
 		state_enter();
- 8005de0:	f7ff fe58 	bl	8005a94 <state_enter>
+ 8005de2:	f7ff fe57 	bl	8005a94 <state_enter>
 	}
 }
- 8005de4:	46c0      	nop			@ (mov r8, r8)
- 8005de6:	46bd      	mov	sp, r7
- 8005de8:	bd80      	pop	{r7, pc}
- 8005dea:	46c0      	nop			@ (mov r8, r8)
+ 8005de6:	46c0      	nop			@ (mov r8, r8)
+ 8005de8:	46bd      	mov	sp, r7
+ 8005dea:	bd80      	pop	{r7, pc}
  8005dec:	20000538 	.word	0x20000538
  8005df0:	2000053c 	.word	0x2000053c
  8005df4:	2000003c 	.word	0x2000003c
@@ -13262,7 +13262,7 @@ void water_drain_state(){
  8005eaa:	4b18      	ldr	r3, [pc, #96]	@ (8005f0c <water_drain_state+0x100>)
  8005eac:	781b      	ldrb	r3, [r3, #0]
  8005eae:	2b00      	cmp	r3, #0
- 8005eb0:	d127      	bne.n	8005f02 <water_drain_state+0xf6>
+ 8005eb0:	d128      	bne.n	8005f04 <water_drain_state+0xf8>
 	{
 		// Check water level of main tank to ensure we don't over drain
 		read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
@@ -13297,33 +13297,33 @@ void water_drain_state(){
 		/* If we have reached one gallon drained or if the level of the tank is lower than 20%,
 		 * turn off outbound pump and move to heating state
 		 */
-		if (time_reached || (sensorvalues.waterlevel_tank <= 20))
+		if (time_reached || (sensorvalues.waterlevel_tank <= minimum_tank_val))
  8005ee4:	1dfb      	adds	r3, r7, #7
  8005ee6:	781b      	ldrb	r3, [r3, #0]
  8005ee8:	2b00      	cmp	r3, #0
- 8005eea:	d103      	bne.n	8005ef4 <water_drain_state+0xe8>
+ 8005eea:	d104      	bne.n	8005ef6 <water_drain_state+0xea>
  8005eec:	4b11      	ldr	r3, [pc, #68]	@ (8005f34 <water_drain_state+0x128>)
  8005eee:	685b      	ldr	r3, [r3, #4]
- 8005ef0:	2b14      	cmp	r3, #20
- 8005ef2:	dc06      	bgt.n	8005f02 <water_drain_state+0xf6>
+ 8005ef0:	220a      	movs	r2, #10
+ 8005ef2:	4293      	cmp	r3, r2
+ 8005ef4:	dc06      	bgt.n	8005f04 <water_drain_state+0xf8>
 		{
 			outbound_pump_low();
- 8005ef4:	f7ff fce2 	bl	80058bc <outbound_pump_low>
+ 8005ef6:	f7ff fce1 	bl	80058bc <outbound_pump_low>
 
 			current_state = HEATING_STATE;
- 8005ef8:	4b0f      	ldr	r3, [pc, #60]	@ (8005f38 <water_drain_state+0x12c>)
- 8005efa:	2202      	movs	r2, #2
- 8005efc:	701a      	strb	r2, [r3, #0]
+ 8005efa:	4b0f      	ldr	r3, [pc, #60]	@ (8005f38 <water_drain_state+0x12c>)
+ 8005efc:	2202      	movs	r2, #2
+ 8005efe:	701a      	strb	r2, [r3, #0]
 			state_enter();
- 8005efe:	f7ff fdc9 	bl	8005a94 <state_enter>
+ 8005f00:	f7ff fdc8 	bl	8005a94 <state_enter>
 		}
 	}
 }
- 8005f02:	46c0      	nop			@ (mov r8, r8)
- 8005f04:	46bd      	mov	sp, r7
- 8005f06:	b002      	add	sp, #8
- 8005f08:	bdb0      	pop	{r4, r5, r7, pc}
- 8005f0a:	46c0      	nop			@ (mov r8, r8)
+ 8005f04:	46c0      	nop			@ (mov r8, r8)
+ 8005f06:	46bd      	mov	sp, r7
+ 8005f08:	b002      	add	sp, #8
+ 8005f0a:	bdb0      	pop	{r4, r5, r7, pc}
  8005f0c:	2000003c 	.word	0x2000003c
  8005f10:	2000003d 	.word	0x2000003d
  8005f14:	20000588 	.word	0x20000588
@@ -13725,51 +13725,51 @@ void water_fill_state(){
  8006198:	415b      	adcs	r3, r3
  800619a:	7013      	strb	r3, [r2, #0]
 
-	if (time_reached || (sensorvalues.waterlevel_tank >= 80))
+	if (time_reached || (sensorvalues.waterlevel_tank >= maximum_tank_val))
  800619c:	193b      	adds	r3, r7, r4
  800619e:	781b      	ldrb	r3, [r3, #0]
  80061a0:	2b00      	cmp	r3, #0
- 80061a2:	d103      	bne.n	80061ac <water_fill_state+0x14c>
+ 80061a2:	d104      	bne.n	80061ae <water_fill_state+0x14e>
  80061a4:	4b16      	ldr	r3, [pc, #88]	@ (8006200 <water_fill_state+0x1a0>)
  80061a6:	685b      	ldr	r3, [r3, #4]
- 80061a8:	2b4f      	cmp	r3, #79	@ 0x4f
- 80061aa:	dd14      	ble.n	80061d6 <water_fill_state+0x176>
+ 80061a8:	2205      	movs	r2, #5
+ 80061aa:	4293      	cmp	r3, r2
+ 80061ac:	db14      	blt.n	80061d8 <water_fill_state+0x178>
 	{
 		inbound_pump_low();
- 80061ac:	f7ff fba2 	bl	80058f4 <inbound_pump_low>
+ 80061ae:	f7ff fba1 	bl	80058f4 <inbound_pump_low>
 
 		fill_elapsed = 0; // reset for next water change
- 80061b0:	4b15      	ldr	r3, [pc, #84]	@ (8006208 <water_fill_state+0x1a8>)
- 80061b2:	2200      	movs	r2, #0
- 80061b4:	601a      	str	r2, [r3, #0]
+ 80061b2:	4b15      	ldr	r3, [pc, #84]	@ (8006208 <water_fill_state+0x1a8>)
+ 80061b4:	2200      	movs	r2, #0
+ 80061b6:	601a      	str	r2, [r3, #0]
 
 		current_state     = IDLE_STATE;
- 80061b6:	4b15      	ldr	r3, [pc, #84]	@ (800620c <water_fill_state+0x1ac>)
- 80061b8:	2200      	movs	r2, #0
- 80061ba:	701a      	strb	r2, [r3, #0]
+ 80061b8:	4b14      	ldr	r3, [pc, #80]	@ (800620c <water_fill_state+0x1ac>)
+ 80061ba:	2200      	movs	r2, #0
+ 80061bc:	701a      	strb	r2, [r3, #0]
 		state_enter();
- 80061bc:	f7ff fc6a 	bl	8005a94 <state_enter>
+ 80061be:	f7ff fc69 	bl	8005a94 <state_enter>
 		water_change_flag = 0;
- 80061c0:	4b15      	ldr	r3, [pc, #84]	@ (8006218 <water_fill_state+0x1b8>)
- 80061c2:	2200      	movs	r2, #0
- 80061c4:	701a      	strb	r2, [r3, #0]
+ 80061c2:	4b15      	ldr	r3, [pc, #84]	@ (8006218 <water_fill_state+0x1b8>)
+ 80061c4:	2200      	movs	r2, #0
+ 80061c6:	701a      	strb	r2, [r3, #0]
 
 		cooldown.cooldown_flag = 1;
- 80061c6:	4b15      	ldr	r3, [pc, #84]	@ (800621c <water_fill_state+0x1bc>)
- 80061c8:	2201      	movs	r2, #1
- 80061ca:	701a      	strb	r2, [r3, #0]
+ 80061c8:	4b14      	ldr	r3, [pc, #80]	@ (800621c <water_fill_state+0x1bc>)
+ 80061ca:	2201      	movs	r2, #1
+ 80061cc:	701a      	strb	r2, [r3, #0]
 		cooldown.cooldown_sod = get_seconds_of_day();
- 80061cc:	f7ff fc76 	bl	8005abc <get_seconds_of_day>
- 80061d0:	0002      	movs	r2, r0
- 80061d2:	4b12      	ldr	r3, [pc, #72]	@ (800621c <water_fill_state+0x1bc>)
- 80061d4:	605a      	str	r2, [r3, #4]
+ 80061ce:	f7ff fc75 	bl	8005abc <get_seconds_of_day>
+ 80061d2:	0002      	movs	r2, r0
+ 80061d4:	4b11      	ldr	r3, [pc, #68]	@ (800621c <water_fill_state+0x1bc>)
+ 80061d6:	605a      	str	r2, [r3, #4]
 	}
 }
- 80061d6:	46c0      	nop			@ (mov r8, r8)
- 80061d8:	46bd      	mov	sp, r7
- 80061da:	b007      	add	sp, #28
- 80061dc:	bd90      	pop	{r4, r7, pc}
- 80061de:	46c0      	nop			@ (mov r8, r8)
+ 80061d8:	46c0      	nop			@ (mov r8, r8)
+ 80061da:	46bd      	mov	sp, r7
+ 80061dc:	b007      	add	sp, #28
+ 80061de:	bd90      	pop	{r4, r7, pc}
  80061e0:	2000003c 	.word	0x2000003c
  80061e4:	20000556 	.word	0x20000556
  80061e8:	20000580 	.word	0x20000580

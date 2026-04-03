@@ -46,10 +46,14 @@ static uint32_t fill_elapsed = 0;   // total pump runtime accumulated
 static uint32_t fill_start_sod = 0; // start time of the current run
 
 uint8_t flow_rate = 21;   // Time it takes to pump 1 gallon in seconds
+bool overheat = 0;
 
 float FAN_ON_TEMP;
 float FAN_OFF_TEMP;
 static bool fan_on = 0;
+const uint8_t minimum_tank_val = 10; // Distance between sensor and water once water has been drained
+const uint8_t maximum_tank_val = 5; // Distance between sensor and water once water has been pumped back into the tank
+const uint8_t minimum_res_val = 5; // Distance between sensor and water to allow for a water change to begin
 
 extern uint8_t schedule;
 
@@ -159,17 +163,17 @@ void idle_state(){
 		switch (screenSwitch) {
 		case 0: // Current time: 	|   XX/XX XX:XX XM   |
 			LCD_ShowIdleCurrentTime(
-				curr_date_time.month,
-				curr_date_time.day,
-				curr_date_time.hours,
-				curr_date_time.minutes
+					curr_date_time.month,
+					curr_date_time.day,
+					curr_date_time.hours,
+					curr_date_time.minutes
 			);
 			break;
 		case 1: // Scheduled time:	|SCHEDULED XX/XX XXXM|
 			LCD_ShowIdleScheduledTime(
-				sched_date_time.month,
-				sched_date_time.day,
-				sched_date_time.hours
+					sched_date_time.month,
+					sched_date_time.day,
+					sched_date_time.hours
 			);
 			break;
 		}
@@ -229,7 +233,7 @@ void water_res_state(){
 		keypadIter = 0;
 	}
 	// If water level is sufficient (30%), move to water drain state
-	if (sensorvalues.waterlevel_res > 30)
+	if (sensorvalues.waterlevel_res > minimum_res_val)
 	{
 		current_state = AQUA_DRAIN_STATE;
 		state_enter();
@@ -285,7 +289,7 @@ void water_drain_state(){
 		/* If we have reached one gallon drained or if the level of the tank is lower than 20%,
 		 * turn off outbound pump and move to heating state
 		 */
-		if (time_reached || (sensorvalues.waterlevel_tank <= 20))
+		if (time_reached || (sensorvalues.waterlevel_tank <= minimum_tank_val))
 		{
 			outbound_pump_low();
 
@@ -353,6 +357,8 @@ void heating_state(){
 void water_fill_state(){
 	char elapsed_buf[6];
 	// Only perform these commands once
+
+
 	if (state_entry)
 	{
 		state_entry = 0;
@@ -382,31 +388,45 @@ void water_fill_state(){
 	uint32_t curr_sod = get_seconds_of_day();
 
 	uint32_t elapsed = (curr_sod >= fill_start_sod)
-                				? (curr_sod - fill_start_sod)
-                						: (86400u - fill_start_sod + curr_sod);   // midnight rollover safe
+                						? (curr_sod - fill_start_sod)
+                								: (86400u - fill_start_sod + curr_sod);   // midnight rollover safe
 
 	// Monitor temperatures while filling
 	sample_temperature_sensors();
 	float diff = sensorvalues.temperature_res - sensorvalues.temperature_tank;
 
 	// If temp mismatch gets too large, pause filling and go back to heating
-	if (diff < -1.0f || diff > 1.0f)
+	if (diff < -1.0f)
 	{
+		overheat = 0;
 		inbound_pump_low();
-
 		fill_elapsed += elapsed;   // accumulate pump runtime so far
-
+		fill_start_sod = curr_sod;
 		current_state = HEATING_STATE;
 		state_enter();
+		return;
 	}
 
+	if(diff > 1.0f && overheat == 0){
+		inbound_pump_low();
+		fill_elapsed += elapsed;
+		fill_start_sod = curr_sod;
+		overheat = 1;
+		return;
+	}
+	if((diff < 1.0f) && overheat == 1){
+		overheat = 0;
+		inbound_pump_high();
+		return;
+
+	}
 	// Continue fill checks
 	read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 
 	// Does the time elapsed now plus any previous pump time add to our flow rate?
 	bool time_reached = ((fill_elapsed + elapsed) >= flow_rate);
 
-	if (time_reached || (sensorvalues.waterlevel_tank >= 80))
+	if (time_reached || (sensorvalues.waterlevel_tank >= maximum_tank_val))
 	{
 		inbound_pump_low();
 

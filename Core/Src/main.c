@@ -178,11 +178,11 @@ int main(void)
 	// Set RTC CLK rate
 	DS3231_SetRateSelect(DS3231_1HZ);
 	HAL_ADCEx_Calibration_Start(&hadc1);
-	//DS3231_SetMonth(3);
+	//DS3231_SetMonth(4);
 	//DS3231_SetYear(2026);
-	//DS3231_SetDate(12);
-	//DS3231_SetHour(13);
-	//DS3231_SetMinute(56);
+	//DS3231_SetDate(2);
+	//DS3231_SetHour(14);
+	//DS3231_SetMinute(54);
 	//DS3231_SetSecond(0);
 	// Initalize external GPIO
 	MCP23017_Init(&htd);
