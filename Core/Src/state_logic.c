@@ -387,6 +387,10 @@ void water_fill_state(){
 	// Compute time once per loop
 	uint32_t curr_sod = get_seconds_of_day();
 
+	/* If curr_sod is greater or equal to fill_start_sod
+	 * we will use the statement after the ?, otherwise,
+	 * we will use the statement after the :
+	 */
 	uint32_t elapsed = (curr_sod >= fill_start_sod)
                 						? (curr_sod - fill_start_sod)
                 								: (86400u - fill_start_sod + curr_sod);   // midnight rollover safe
