@@ -41,7 +41,8 @@ extern ScheduledWaterChange sched_date_time;
 extern OutOfRangeValues rangevalues;
 // All external variables
 extern bool water_change_flag;
-
+extern bool filling_flag;
+extern bool res_full_flag;
 static uint32_t fill_elapsed = 0;   // total pump runtime accumulated
 static uint32_t fill_start_sod = 0; // start time of the current run
 uint32_t delta = 0;			  // time elapsed since last check
@@ -191,7 +192,7 @@ void idle_state(){
 		check_turbidity(&sensorvalues.turbidity_value);
 		read_ph(&sensorvalues.ph_value);
 		// Only read water level sensors if we aren't filling the reservoir.
-		if(filling_flag == 0){}
+		if(filling_flag == 0){
 			read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 		}
 		// Need to check if these sensors values are out of range
