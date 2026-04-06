@@ -44,16 +44,18 @@ extern bool water_change_flag;
 
 static uint32_t fill_elapsed = 0;   // total pump runtime accumulated
 static uint32_t fill_start_sod = 0; // start time of the current run
-
+uint32_t delta = 0;			  // time elapsed since last check
 uint8_t flow_rate = 21;   // Time it takes to pump 1 gallon in seconds
 bool overheat = 0;
 
 float FAN_ON_TEMP;
 float FAN_OFF_TEMP;
 static bool fan_on = 0;
-const uint8_t minimum_tank_val = 10; // Distance between sensor and water once water has been drained
-const uint8_t maximum_tank_val = 5; // Distance between sensor and water once water has been pumped back into the tank
-const uint8_t minimum_res_val = 5; // Distance between sensor and water to allow for a water change to begin
+static bool inbound_pump_on = 0;
+
+const uint8_t minimum_tank_val = 17; // Distance between sensor and water once water has been drained
+const uint8_t maximum_tank_val = 8; // Distance between sensor and water once water has been pumped back into the tank
+const uint8_t minimum_res_val = 4; // Distance between sensor and water to allow for a water change to begin
 
 extern uint8_t schedule;
 
@@ -366,6 +368,8 @@ void water_fill_state(){
 		estTime = 0;
 
 		LCD_ShowFillScreen(flow_rate);
+		// Set inbound pump & flag high
+		inbound_pump_on = 1;
 		inbound_pump_high();
 
 		fill_start_sod = get_seconds_of_day();
@@ -387,39 +391,42 @@ void water_fill_state(){
 	// Compute time once per loop
 	uint32_t curr_sod = get_seconds_of_day();
 
-	/* If curr_sod is greater or equal to fill_start_sod
-	 * we will use the statement after the ?, otherwise,
-	 * we will use the statement after the :
-	 */
-	uint32_t elapsed = (curr_sod >= fill_start_sod)
-                						? (curr_sod - fill_start_sod)
-                								: (86400u - fill_start_sod + curr_sod);   // midnight rollover safe
+	uint32_t delta = (curr_sod >= fill_start_sod)
+		? (curr_sod - fill_start_sod)
+		: (86400u - fill_start_sod + curr_sod);
 
+	// always update reference
+	fill_start_sod = curr_sod;
+
+	// only accumulate when pump is ON
+	if (inbound_pump_on) {
+		fill_elapsed += delta;
+	}
 	// Monitor temperatures while filling
 	sample_temperature_sensors();
+
 	float diff = sensorvalues.temperature_res - sensorvalues.temperature_tank;
 
 	// If temp mismatch gets too large, pause filling and go back to heating
 	if (diff < -1.0f)
 	{
 		overheat = 0;
+		inbound_pump_on = 0;
 		inbound_pump_low();
-		fill_elapsed += elapsed;   // accumulate pump runtime so far
-		fill_start_sod = curr_sod;
 		current_state = HEATING_STATE;
 		state_enter();
 		return;
 	}
 
 	if(diff > 1.0f && overheat == 0){
+		inbound_pump_on = 0;
 		inbound_pump_low();
-		fill_elapsed += elapsed;
-		fill_start_sod = curr_sod;
 		overheat = 1;
 		return;
 	}
 	if((diff < 1.0f) && overheat == 1){
 		overheat = 0;
+		inbound_pump_on = 1;
 		inbound_pump_high();
 		return;
 
@@ -428,7 +435,7 @@ void water_fill_state(){
 	read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 
 	// Does the time elapsed now plus any previous pump time add to our flow rate?
-	bool time_reached = ((fill_elapsed + elapsed) >= flow_rate);
+	bool time_reached = (fill_elapsed >= flow_rate);
 
 	if (time_reached || (sensorvalues.waterlevel_tank >= maximum_tank_val))
 	{

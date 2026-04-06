@@ -7523,7 +7523,7 @@ void sample_temperature_sensors(){
  8003aa8:	20000370 	.word	0x20000370
 
 08003aac <timer_expired>:
-		.hours = 15,
+		.hours = 12,
 };
 
 
@@ -13128,7 +13128,7 @@ void water_res_state(){
 	if (sensorvalues.waterlevel_res > minimum_res_val)
  8005dd2:	4b0a      	ldr	r3, [pc, #40]	@ (8005dfc <water_res_state+0x94>)
  8005dd4:	689b      	ldr	r3, [r3, #8]
- 8005dd6:	2205      	movs	r2, #5
+ 8005dd6:	2204      	movs	r2, #4
  8005dd8:	4293      	cmp	r3, r2
  8005dda:	dd04      	ble.n	8005de6 <water_res_state+0x7e>
 	{
@@ -13304,7 +13304,7 @@ void water_drain_state(){
  8005eea:	d104      	bne.n	8005ef6 <water_drain_state+0xea>
  8005eec:	4b11      	ldr	r3, [pc, #68]	@ (8005f34 <water_drain_state+0x128>)
  8005eee:	685b      	ldr	r3, [r3, #4]
- 8005ef0:	220a      	movs	r2, #10
+ 8005ef0:	2211      	movs	r2, #17
  8005ef2:	4293      	cmp	r3, r2
  8005ef4:	dc06      	bgt.n	8005f04 <water_drain_state+0xf8>
 		{
@@ -13631,6 +13631,10 @@ void water_fill_state(){
  8006102:	0003      	movs	r3, r0
  8006104:	617b      	str	r3, [r7, #20]
 
+	/* If curr_sod is greater or equal to fill_start_sod
+	 * we will use the statement after the ?, otherwise,
+	 * we will use the statement after the :
+	 */
 	uint32_t elapsed = (curr_sod >= fill_start_sod)
  8006106:	4b51      	ldr	r3, [pc, #324]	@ (800624c <water_fill_state+0x1ec>)
  8006108:	681b      	ldr	r3, [r3, #0]
@@ -13791,7 +13795,7 @@ void water_fill_state(){
  80061fe:	d104      	bne.n	800620a <water_fill_state+0x1aa>
  8006200:	4b16      	ldr	r3, [pc, #88]	@ (800625c <water_fill_state+0x1fc>)
  8006202:	685b      	ldr	r3, [r3, #4]
- 8006204:	2205      	movs	r2, #5
+ 8006204:	2208      	movs	r2, #8
  8006206:	4293      	cmp	r3, r2
  8006208:	db14      	blt.n	8006234 <water_fill_state+0x1d4>
 	{
