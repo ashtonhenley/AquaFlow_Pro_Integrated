@@ -221,6 +221,11 @@ void water_res_state(){
 	read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 
 	if (state_entry) {
+		if(res_full_flag){
+			state_entry = 1;
+			current_state = AQUA_DRAIN_STATE;
+			return;
+		}
 		LCD_ShowReservoirCheckScreen();
 		// Need to implement a waiting phase if we're out of range.
 
