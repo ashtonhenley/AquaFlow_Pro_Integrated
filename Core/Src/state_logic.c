@@ -369,8 +369,9 @@ void water_fill_state(){
 
 		LCD_ShowFillScreen(flow_rate);
 		// Set inbound pump & flag high
-		inbound_pump_on = 1;
+
 		inbound_pump_high();
+		inbound_pump_on = 1;
 
 		fill_start_sod = get_seconds_of_day();
 
@@ -411,23 +412,23 @@ void water_fill_state(){
 	if (diff < -1.0f)
 	{
 		overheat = 0;
-		inbound_pump_on = 0;
 		inbound_pump_low();
+		inbound_pump_on = 0;
 		current_state = HEATING_STATE;
 		state_enter();
 		return;
 	}
 
 	if(diff > 1.0f && overheat == 0){
-		inbound_pump_on = 0;
 		inbound_pump_low();
+		inbound_pump_on = 0;
 		overheat = 1;
 		return;
 	}
 	if((diff < 1.0f) && overheat == 1){
 		overheat = 0;
-		inbound_pump_on = 1;
 		inbound_pump_high();
+		inbound_pump_on = 1;
 		return;
 
 	}
@@ -440,7 +441,7 @@ void water_fill_state(){
 	if (time_reached || (sensorvalues.waterlevel_tank >= maximum_tank_val))
 	{
 		inbound_pump_low();
-
+		inbound_pump_on = 0;
 		fill_elapsed = 0; // reset for next water change
 
 		current_state     = IDLE_STATE;
