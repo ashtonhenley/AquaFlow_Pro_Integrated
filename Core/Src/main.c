@@ -71,6 +71,8 @@ uint16_t adc_buffer [2] = {0};
 bool water_change_flag = 0;
 // Water reservoir full flag
 bool res_full_flag = 0;
+// Filling flag
+bool filling_flag = 0;
 // Create an instance of the SensorValues Struct, initialize to 0
 SensorValues sensorvalues = {0};
 

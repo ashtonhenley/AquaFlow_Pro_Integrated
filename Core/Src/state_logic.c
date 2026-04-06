@@ -190,7 +190,10 @@ void idle_state(){
 		sample_temperature_sensors();
 		check_turbidity(&sensorvalues.turbidity_value);
 		read_ph(&sensorvalues.ph_value);
-		read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
+		// Only read water level sensors if we aren't filling the reservoir.
+		if(filling_flag == 0){}
+			read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
+		}
 		// Need to check if these sensors values are out of range
 		// check_envir_flags();
 		is_flag_high();
