@@ -244,7 +244,7 @@ void water_res_state(){
 		keypadIter = 0;
 	}
 	// If water level is sufficient (30%), move to water drain state
-	if (sensorvalues.waterlevel_res > minimum_res_val)
+	if (sensorvalues.waterlevel_res < minimum_res_val)
 	{
 		current_state = AQUA_DRAIN_STATE;
 		state_enter();
@@ -300,7 +300,7 @@ void water_drain_state(){
 		/* If we have reached one gallon drained or if the level of the tank is lower than 20%,
 		 * turn off outbound pump and move to heating state
 		 */
-		if (time_reached || (sensorvalues.waterlevel_tank <= minimum_tank_val))
+		if (time_reached || (sensorvalues.waterlevel_tank >= minimum_tank_val))
 		{
 			outbound_pump_low();
 

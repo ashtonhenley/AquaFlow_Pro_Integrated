@@ -24,7 +24,7 @@ ConditionFlags tankFlags = {0};
 // Create an instance of OutOfRangeValues and initialize to preset values
 OutOfRangeValues rangevalues =
 {
-	.max_temp = 80,
+	.max_temp = 70,
     .turbidity = 15,
     .low_ph    = 6.5,
     .high_ph   = 8.5

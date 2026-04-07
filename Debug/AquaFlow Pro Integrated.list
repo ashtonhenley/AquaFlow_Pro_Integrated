@@ -7523,7 +7523,7 @@ void sample_temperature_sensors(){
  8003aa8:	20000370 	.word	0x20000370
 
 08003aac <timer_expired>:
-		.hours = 12,
+		.hours = 17,
 };
 
 
@@ -11495,9 +11495,9 @@ static void MX_GPIO_Init(void)
  800538c:	f003 fbff 	bl	8008b8e <HAL_GPIO_WritePin>
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14, GPIO_PIN_RESET);
- 8005390:	23e0      	movs	r3, #224	@ 0xe0
- 8005392:	01db      	lsls	r3, r3, #7
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
+ 8005390:	23f0      	movs	r3, #240	@ 0xf0
+ 8005392:	021b      	lsls	r3, r3, #8
  8005394:	483e      	ldr	r0, [pc, #248]	@ (8005490 <MX_GPIO_Init+0x19c>)
  8005396:	2200      	movs	r2, #0
  8005398:	0019      	movs	r1, r3
@@ -11558,12 +11558,12 @@ static void MX_GPIO_Init(void)
  80053ec:	0018      	movs	r0, r3
  80053ee:	f003 f96d 	bl	80086cc <HAL_GPIO_Init>
 
-  /*Configure GPIO pins : PB12 PB13 PB14 */
-  GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14;
+  /*Configure GPIO pins : PB12 PB13 PB14 PB15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
  80053f2:	0021      	movs	r1, r4
  80053f4:	187b      	adds	r3, r7, r1
- 80053f6:	22e0      	movs	r2, #224	@ 0xe0
- 80053f8:	01d2      	lsls	r2, r2, #7
+ 80053f6:	22f0      	movs	r2, #240	@ 0xf0
+ 80053f8:	0212      	lsls	r2, r2, #8
  80053fa:	601a      	str	r2, [r3, #0]
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
  80053fc:	000c      	movs	r4, r1
@@ -13153,12 +13153,12 @@ void water_res_state(){
  8005dfa:	801a      	strh	r2, [r3, #0]
 	}
 	// If water level is sufficient (30%), move to water drain state
-	if (sensorvalues.waterlevel_res > minimum_res_val)
+	if (sensorvalues.waterlevel_res < minimum_res_val)
  8005dfc:	4b0b      	ldr	r3, [pc, #44]	@ (8005e2c <water_res_state+0xb0>)
  8005dfe:	689b      	ldr	r3, [r3, #8]
  8005e00:	2204      	movs	r2, #4
  8005e02:	4293      	cmp	r3, r2
- 8005e04:	dd04      	ble.n	8005e10 <water_res_state+0x94>
+ 8005e04:	da04      	bge.n	8005e10 <water_res_state+0x94>
 	{
 		current_state = AQUA_DRAIN_STATE;
  8005e06:	4b07      	ldr	r3, [pc, #28]	@ (8005e24 <water_res_state+0xa8>)
@@ -13325,7 +13325,7 @@ void water_drain_state(){
 		/* If we have reached one gallon drained or if the level of the tank is lower than 20%,
 		 * turn off outbound pump and move to heating state
 		 */
-		if (time_reached || (sensorvalues.waterlevel_tank <= minimum_tank_val))
+		if (time_reached || (sensorvalues.waterlevel_tank >= minimum_tank_val))
  8005f10:	1dfb      	adds	r3, r7, #7
  8005f12:	781b      	ldrb	r3, [r3, #0]
  8005f14:	2b00      	cmp	r3, #0
@@ -13334,7 +13334,7 @@ void water_drain_state(){
  8005f1a:	685b      	ldr	r3, [r3, #4]
  8005f1c:	2211      	movs	r2, #17
  8005f1e:	4293      	cmp	r3, r2
- 8005f20:	dc06      	bgt.n	8005f30 <water_drain_state+0xf8>
+ 8005f20:	db06      	blt.n	8005f30 <water_drain_state+0xf8>
 		{
 			outbound_pump_low();
  8005f22:	f7ff fccb 	bl	80058bc <outbound_pump_low>
