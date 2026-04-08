@@ -258,6 +258,8 @@ void water_drain_state(){
 
 	if (state_entry)
 	{
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
 		// Set outbound pump high
 		LCD_ShowDrainScreen(flow_rate);
 		outbound_pump_high();
@@ -267,8 +269,7 @@ void water_drain_state(){
 		state_entry = 0;
 		keypadIter = 0;
 		estTime = 0;
-		// Delay for ensuring pumps don't shock PSU
-		HAL_Delay(2000);
+
 		state_leave();
 	}
 	if (keypadIter > 165) {
@@ -362,6 +363,8 @@ void heating_state(){
 		/* Turn on heater & circulating pump
 		 * MCP23017 is setting PA0 High
 		 */
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
 		heater_high();
 		circulating_pump_high();
 	}
@@ -378,15 +381,13 @@ void water_fill_state(){
 		keypadIter = 0;
 		estTime = 0;
 
-		LCD_ShowFillScreen(flow_rate);
 		// Set inbound pump & flag high
-
-		inbound_pump_high();
-		inbound_pump_on = 1;
-
-		fill_start_sod = get_seconds_of_day();
 		// Delay for ensuring pumps don't shock PSU
 		HAL_Delay(2000);
+		LCD_ShowFillScreen(flow_rate);
+		inbound_pump_high();
+		inbound_pump_on = 1;
+		fill_start_sod = get_seconds_of_day();
 		state_leave();
 	}
 	if (keypadIter > 165) {
@@ -432,14 +433,16 @@ void water_fill_state(){
 	}
 
 	if(diff > 1.0f && overheat == 0){
-		HAL_Delay(1000);
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
 		inbound_pump_low();
 		inbound_pump_on = 0;
 		overheat = 1;
 		return;
 	}
 	if((diff < 1.0f) && overheat == 1){
-		HAL_Delay(1000);
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
 		overheat = 0;
 		inbound_pump_high();
 		inbound_pump_on = 1;
