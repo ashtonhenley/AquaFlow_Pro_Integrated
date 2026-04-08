@@ -432,12 +432,14 @@ void water_fill_state(){
 	}
 
 	if(diff > 1.0f && overheat == 0){
+		HAL_Delay(1000);
 		inbound_pump_low();
 		inbound_pump_on = 0;
 		overheat = 1;
 		return;
 	}
 	if((diff < 1.0f) && overheat == 1){
+		HAL_Delay(1000);
 		overheat = 0;
 		inbound_pump_high();
 		inbound_pump_on = 1;
