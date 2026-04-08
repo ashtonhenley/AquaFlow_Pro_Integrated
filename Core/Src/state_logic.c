@@ -54,8 +54,8 @@ float FAN_OFF_TEMP;
 static bool fan_on = 0;
 static bool inbound_pump_on = 0;
 
-const uint8_t minimum_tank_val = 17; // Distance between sensor and water once water has been drained
-const uint8_t maximum_tank_val = 8; // Distance between sensor and water once water has been pumped back into the tank
+const uint8_t minimum_tank_val = 12; // Distance between sensor and water once water has been drained
+const uint8_t maximum_tank_val = 2; // Distance between sensor and water once water has been pumped back into the tank
 const uint8_t minimum_res_val = 4; // Distance between sensor and water to allow for a water change to begin
 
 extern uint8_t schedule;
@@ -267,8 +267,8 @@ void water_drain_state(){
 		state_entry = 0;
 		keypadIter = 0;
 		estTime = 0;
-
-
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
 		state_leave();
 	}
 	if (keypadIter > 165) {
@@ -319,6 +319,8 @@ void heating_state(){
 		state_entry = 0;
 		keypadIter = 1000;
 		LCD_ShowHeatingScreen();
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
 	}
 	if (keypadIter > 999) {
 		num_to_char_4(sensorvalues.temperature_res);
@@ -347,7 +349,7 @@ void heating_state(){
 	 * the heating element still being hot after being turned off
 	 */
 
-	if (diff >= 0.0f && fabsf(diff) <= 1.0f)
+	if (diff >= 0.0f && fabsf(diff) <= 2.0f)
 	{
 		heater_low();
 		circulating_pump_low();
@@ -383,7 +385,8 @@ void water_fill_state(){
 		inbound_pump_on = 1;
 
 		fill_start_sod = get_seconds_of_day();
-
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
 		state_leave();
 	}
 	if (keypadIter > 165) {
@@ -447,7 +450,7 @@ void water_fill_state(){
 	// Does the time elapsed now plus any previous pump time add to our flow rate?
 	bool time_reached = (fill_elapsed >= flow_rate);
 
-	if (time_reached || (sensorvalues.waterlevel_tank >= maximum_tank_val))
+	if (time_reached || (sensorvalues.waterlevel_tank <= maximum_tank_val))
 	{
 		inbound_pump_low();
 		inbound_pump_on = 0;

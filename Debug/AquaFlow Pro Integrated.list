@@ -7523,7 +7523,7 @@ void sample_temperature_sensors(){
  8003aa8:	20000370 	.word	0x20000370
 
 08003aac <timer_expired>:
-		.hours = 17,
+		.hours = 11,
 };
 
 
@@ -13332,7 +13332,7 @@ void water_drain_state(){
  8005f16:	d104      	bne.n	8005f22 <water_drain_state+0xea>
  8005f18:	4b11      	ldr	r3, [pc, #68]	@ (8005f60 <water_drain_state+0x128>)
  8005f1a:	685b      	ldr	r3, [r3, #4]
- 8005f1c:	2211      	movs	r2, #17
+ 8005f1c:	220c      	movs	r2, #12
  8005f1e:	4293      	cmp	r3, r2
  8005f20:	db06      	blt.n	8005f30 <water_drain_state+0xf8>
 		{
@@ -13834,7 +13834,7 @@ void water_fill_state(){
  8006234:	d104      	bne.n	8006240 <water_fill_state+0x1b4>
  8006236:	4b1a      	ldr	r3, [pc, #104]	@ (80062a0 <water_fill_state+0x214>)
  8006238:	685b      	ldr	r3, [r3, #4]
- 800623a:	2208      	movs	r2, #8
+ 800623a:	2202      	movs	r2, #2
  800623c:	4293      	cmp	r3, r2
  800623e:	db17      	blt.n	8006270 <water_fill_state+0x1e4>
 	{
