@@ -17,8 +17,8 @@ ScheduledWaterChange sched_date_time = {
 		.day = 9,
 		.month = 4,
 		.year = 26,
-		.minutes = 59,
-		.hours = 11,
+		.minutes = 10,
+		.hours = 14,
 };
 
 
