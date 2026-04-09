@@ -60,8 +60,8 @@ all: main-build
 main-build: AquaFlow\ Pro\ Integrated.elf secondary-outputs
 
 # Tool invocations
-AquaFlow\ Pro\ Integrated.elf AquaFlow\ Pro\ Integrated.map: $(OBJS) $(USER_OBJS) /Users/ashtonhenley/Library/CloudStorage/OneDrive-Personal/Desktop/CpE\ Spring\ Year\ 4/Senior\ Design\ II/Code/AquaFlow\ Pro\ Integrated/STM32G0B1RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "AquaFlow Pro Integrated.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"/Users/ashtonhenley/Library/CloudStorage/OneDrive-Personal/Desktop/CpE Spring Year 4/Senior Design II/Code/AquaFlow Pro Integrated/STM32G0B1RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="AquaFlow Pro Integrated.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+AquaFlow\ Pro\ Integrated.elf AquaFlow\ Pro\ Integrated.map: $(OBJS) $(USER_OBJS) C:\Users\khali\STM32CubeIDE\workspace_1.18.1\AquaFlow_Pro\ 4-6\AquaFlow_Pro_Integrated\STM32G0B1RETX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "AquaFlow Pro Integrated.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m0plus -T"C:\Users\khali\STM32CubeIDE\workspace_1.18.1\AquaFlow_Pro 4-6\AquaFlow_Pro_Integrated\STM32G0B1RETX_FLASH.ld" --specs=nosys.specs -Wl,-Map="AquaFlow Pro Integrated.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

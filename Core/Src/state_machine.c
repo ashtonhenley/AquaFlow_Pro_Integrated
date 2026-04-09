@@ -15,6 +15,7 @@ extern ScheduledWaterChange sched_date_time;
 extern CooldownStruct cooldown;
 extern DateTimeStruct curr_date_time;
 extern bool water_change_flag;
+extern bool fan_on;
 extern SensorValues sensorvalues;
 extern uint8_t schedule;
 // Start in idle state
@@ -42,6 +43,7 @@ void sched_curr_time()
         {
         	// Reset fan
         	fan_low();
+        	fan_on = 0;
             current_state = WATER_RES_STATE;
             state_enter();
             water_change_flag = 1;
@@ -111,6 +113,7 @@ void is_flag_high()
         {
         	// Reset fan
         	fan_low();
+        	fan_on = 0;
             current_state     = WATER_RES_STATE;
             state_enter();
             water_change_flag = 1;

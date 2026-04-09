@@ -40,8 +40,8 @@ extern DateTimeStruct curr_date_time;
 extern ScheduledWaterChange sched_date_time;
 extern OutOfRangeValues rangevalues;
 // All external variables
-extern bool water_change_flag;
-extern bool filling_flag;
+extern bool water_change_flag; // Additionally referenced during routine in the case of a "change out of the menu" mentioned below
+extern bool lids;
 extern bool res_full_flag;
 static uint32_t fill_elapsed = 0;   // total pump runtime accumulated
 static uint32_t fill_start_sod = 0; // start time of the current run
@@ -51,7 +51,7 @@ bool overheat = 0;
 
 float FAN_ON_TEMP;
 float FAN_OFF_TEMP;
-static bool fan_on = 0;
+bool fan_on = 0;
 static bool inbound_pump_on = 0;
 
 const uint8_t minimum_tank_val = 12; // Distance between sensor and water once water has been drained
@@ -62,7 +62,7 @@ extern uint8_t schedule;
 
 extern bool manualStartFlag;
 extern bool menuExit; // Set high upon a menu exit.
-// Intended for reference in displaying idle screen; must be reconciled if a change begins "right after exiting" (i.e. set low wherever water_change_flag is set high)
+// Referenced for idle screen display "out of the menu;" must be reconciled if a change is to begin at that time instead; that is, it must be set low wherever water_change_flag is set high
 
 extern char XX[3];
 extern char XXdXX[5];
@@ -98,7 +98,7 @@ void num_to_char_4(float num) { // Assumed: num < 100
 void state_enter(){
 	state_entry = 1;
 }
-void state_leave(){
+void state_maintain(){
 	state_entry = 0;
 }
 
@@ -110,6 +110,15 @@ uint32_t get_seconds_of_day(void)
 }
 
 void idle_state(){
+
+	// In the case of a manual water change trigger, bail out of processing while
+	if (manualStartFlag){
+		water_change_flag = 1;
+		current_state = WATER_RES_STATE;
+		state_enter();
+		manualStartFlag = 0;
+		return;
+	}
 
 	static uint32_t idle_sod = 0;
 	bool time_reached;
@@ -132,7 +141,8 @@ void idle_state(){
 			curr_date_time.seconds
 	);
 
-	// Interface: display idle mode screen with (up-to-date) relevant information. To be done only upon state entry (+ out of the menu) or when sensor values are updated
+	// Interface: display idle mode screen with (up-to-date) relevant information. To be done only upon state entry (+ out of the menu) or when sensor values are updated;
+	// furthermore, a call after sensing-related processing has occurred allows for ability to prevent a display routine "right before" a sensed/scheduled change occurs
 	if (menuExit || state_entry || time_reached) {
 
 		if (menuExit || state_entry) {
@@ -158,7 +168,7 @@ void idle_state(){
 		LCD_ShowIdleOverview(temp_buf, XX, ph_buf);
 
 		menuExit = 0;
-		state_entry = 0;
+		state_maintain();
 
 	}
 
@@ -191,12 +201,11 @@ void idle_state(){
 		sample_temperature_sensors();
 		check_turbidity(&sensorvalues.turbidity_value);
 		read_ph(&sensorvalues.ph_value);
-		// Only read water level sensors if we aren't filling the reservoir.
-		if(filling_flag == 0){
+		// Only read water level sensors if the reservoir lid is necessarily on (e.g. when the reservoir isn't being filled)
+		if(lids){
 			read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 		}
 		// Need to check if these sensors values are out of range
-		// check_envir_flags();
 		is_flag_high();
 		// Need to check if we have a water change scheduled for this time
 		sched_curr_time();
@@ -204,6 +213,10 @@ void idle_state(){
 		// Reset our start time
 		idle_sod = get_seconds_of_day();
 	}
+
+	// At this point, the remaining parts of the routine can be bailed out of if a water change is slated to begin
+	if (water_change_flag) return;
+
 	/* Are we over max temperature allowed?
 	 * if so, turn on fan, otherwise, turn off fan
 	 */
@@ -218,6 +231,60 @@ void idle_state(){
 		fan_low();
 		fan_on = 0;
 	}
+
+	// Interface: display idle mode screen with (up-to-date) relevant information. To be done only upon state entry (+ out of the menu) or when sensor values are updated;
+	// furthermore, a call after sensing-related processing has occurred allows for ability to prevent a display routine "right before" a sensed/scheduled change occurs (see above)
+	if (menuExit || state_entry || time_reached) {
+
+		if (menuExit || state_entry) {
+			keypadIter = 5000;
+			screenSwitch = 0;
+		}
+
+		num_to_char_4(sensorvalues.temperature_tank);
+		temp_buf[0] = XXdXX[0];
+		temp_buf[1] = XXdXX[1];
+		temp_buf[2] = XXdXX[2];
+		temp_buf[3] = XXdXX[3];
+		temp_buf[4] = XXdXX[4];
+		temp_buf[5] = '\0';
+		num_to_char_2(sensorvalues.turbidity_value);
+		num_to_char_4(sensorvalues.ph_value);
+		ph_buf[0] = XXdXX[0];
+		ph_buf[1] = XXdXX[1];
+		ph_buf[2] = XXdXX[2];
+		ph_buf[3] = XXdXX[3];
+		ph_buf[4] = XXdXX[4];
+		ph_buf[5] = '\0';
+		LCD_ShowIdleOverview(temp_buf, XX, ph_buf);
+
+		menuExit = 0;
+		state_maintain();
+
+	}
+
+	if (keypadIter > 4999) { // 5 sec between each screen refresh
+		switch (screenSwitch) {
+		case 0: // Current time: 	|   XX/XX XX:XX XM   |
+			LCD_ShowIdleCurrentTime(
+					curr_date_time.month,
+					curr_date_time.day,
+					curr_date_time.hours,
+					curr_date_time.minutes
+			);
+			break;
+		case 1: // Scheduled time:	|SCHEDULED XX/XX XXXM|
+			LCD_ShowIdleScheduledTime(
+					sched_date_time.month,
+					sched_date_time.day,
+					sched_date_time.hours
+			);
+			break;
+		}
+		keypadIter = 0;
+		screenSwitch = (screenSwitch + 1) % 2;
+	}
+
 }
 
 void water_res_state(){
@@ -226,16 +293,16 @@ void water_res_state(){
 
 	if (state_entry) {
 		if(res_full_flag){
-			state_entry = 1;
+			state_enter();
 			current_state = AQUA_DRAIN_STATE;
 			return;
 		}
 		LCD_ShowReservoirCheckScreen();
 		// Need to implement a waiting phase if we're out of range.
 
-		state_entry = 0;
+		state_maintain();
 		keypadIter = 166;
-		state_entry = 0;
+
 	}
 	if (keypadIter > 165) { // 166 ms (1/6 sec) between refreshes
 		num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f)); // Percentage = 100 * level/30
@@ -266,11 +333,11 @@ void water_drain_state(){
 
 		// Get start time of outbound pump
 		drain_sod = get_seconds_of_day();
-		state_entry = 0;
+		state_maintain();
 		keypadIter = 0;
 		estTime = 0;
 
-		state_leave();
+		state_maintain();
 	}
 	if (keypadIter > 165) {
 		estTime += 0.1666f;
@@ -317,7 +384,7 @@ void heating_state(){
 	// Sample both temperature sensors
 	sample_temperature_sensors();
 	if (state_entry) {
-		state_entry = 0;
+		state_maintain();
 		keypadIter = 1000;
 		LCD_ShowHeatingScreen();
 		// Delay for ensuring pumps don't shock PSU
@@ -377,7 +444,7 @@ void water_fill_state(){
 
 	if (state_entry)
 	{
-		state_entry = 0;
+		state_maintain();
 		keypadIter = 0;
 		estTime = 0;
 
@@ -388,7 +455,7 @@ void water_fill_state(){
 		inbound_pump_high();
 		inbound_pump_on = 1;
 		fill_start_sod = get_seconds_of_day();
-		state_leave();
+		state_maintain();
 	}
 	if (keypadIter > 165) {
 		estTime += 0.1666f;
@@ -464,6 +531,7 @@ void water_fill_state(){
 		current_state     = IDLE_STATE;
 		state_enter();
 		water_change_flag = 0;
+		update_schedule();
 
 		cooldown.cooldown_flag = 1;
 		cooldown.cooldown_sod = get_seconds_of_day();

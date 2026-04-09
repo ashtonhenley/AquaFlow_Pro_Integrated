@@ -69,10 +69,8 @@ UART_HandleTypeDef huart6;
 uint16_t adc_buffer [2] = {0};
 // Water change flag to ensure we don't go back in states
 bool water_change_flag = 0;
-// Water reservoir full flag
-bool res_full_flag = 0;
-// Filling flag
-bool filling_flag = 0;
+bool res_full_flag = 0; // Indicates that the reservoir "is filled" (per the most recent sensor reading)
+bool lids = 0; // Lids on/off when high/low
 // Create an instance of the SensorValues Struct, initialize to 0
 SensorValues sensorvalues = {0};
 
@@ -91,8 +89,8 @@ uint16_t keypadIter = 0; // Keypad iterations (i.e. TIM2 interrupt callbacks): 1
 uint8_t screenSwitch = 0; // Employed for manipulation by timing mechanisms
 
 // Involving the navigation/entry menu
-uint8_t menuState = 0; // thru 5 (% 6)
-char* menuLabels[6] = { "TEMPHIGH", "TRBDTY", "PHLOW", "PHHIGH", "SCHEDULE", "START" };
+uint8_t menuState = 0; // thru 11 (% 12)
+char* menuLabels[6] = { "TEMPHIGH", "TRBDTY", "PHLOW", "PHHIGH", "SCHEDULE", "START", "LIDS", "SETYY", "SETMM", "SETDD", "SETHR", "SETMIN" };
 char inputBuf[2] = {'0','0'};
 uint8_t inputNum; // For decoding of inputted data (characters)
 uint8_t place;
@@ -104,6 +102,8 @@ uint8_t schedule = 10; // Offset in days. Accepted entries: two-digit values fro
 
 bool manualStartFlag = 0;
 bool menuExit = 0;
+
+bool startup = 1; // Used only to update the schedule once on startup
 
 // Reusable buffers for encoding of numerical data via sprintf; length of XX compensates for the presence of a null terminator. All numbers are unsigned
 // The functions manipulating these properties are defined in state_machine.c for use across both files
@@ -181,12 +181,6 @@ int main(void)
 	// Set RTC CLK rate
 	DS3231_SetRateSelect(DS3231_1HZ);
 	HAL_ADCEx_Calibration_Start(&hadc1);
-	//DS3231_SetMonth(4);
-	//DS3231_SetYear(2026);
-	//DS3231_SetDate(2);
-	//DS3231_SetHour(14);
-	//DS3231_SetMinute(54);
-	//DS3231_SetSecond(0);
 	// Initalize external GPIO
 	MCP23017_Init(&htd);
 	// For Interface:
@@ -205,7 +199,11 @@ int main(void)
     /* USER CODE BEGIN 3 */
 		// Update date and time
 		update_date_time();
-		// Only check for scheduled water change if we're not changing water
+		if (startup) {
+			update_schedule();
+			startup = 0;
+		}
+		// Only check for scheduled water change if we're not changing water (or blocked in the navigation menu)
 		if(water_change_flag != 1){
 			sched_curr_time();
 
@@ -221,7 +219,7 @@ int main(void)
 		// Handle state machine
 		handle_water_state();
 
-		// Beginning Interface Code
+		// BEGIN INTERFACE CODE - navigation menu
 
 		readKey = Keypad_ReadDebouncedKeyPress();
 		if (!water_change_flag && readKey == 'A') { // Navigation menu entry (done only from the idle state)
@@ -234,17 +232,24 @@ int main(void)
 
 				LCD_WriteString("ENTRY:    ");
 				LCD_WriteString(menuLabels[menuState]);
-				if (menuState != 4) {
+				switch (menuState) {
+				case 5:
+				case 6:
+					break;
+				default:
 					LCD_SetCursor(20);
 					LCD_WriteString("CURRENT");
 					LCD_SetCursor(40);
 					LCD_WriteString("NEW       00");
+					break;
 				}
 				LCD_SetCursor(60);
 				LCD_WriteString("NEXT      ");
-				LCD_WriteString(menuLabels[(menuState + 1) % 6]);
+				LCD_WriteString(menuLabels[(menuState + 1) % 12]);
 
 				LCD_SetCursor(30);
+
+				update_date_time(); // For time set items ("as recent as possible")
 
 				switch (menuState) { // Unique information
 				default: // 0 - TEMPHIGH
@@ -273,12 +278,37 @@ int main(void)
 					break;
 				case 5: // START
 					LCD_SetCursor(20);
-					LCD_WriteString("0X)START 1X)UPDATE");
+					LCD_WriteString((lids) ? "CURRENT   ON" : "CURRENT   OFF");
+					LCD_SetCursor(40);
+					LCD_WriteString("XX)TOGGLE");
+					break;
+				case 6: // LIDS
+					LCD_SetCursor(20);
+					LCD_WriteString("0X)START  1X)UPDATE");
 					LCD_SetCursor(40);
 					LCD_WriteString("CHOICE");
 					break;
+				case 7: // SETYY
+					num_to_char_2((uint8_t)curr_date_time.year);
+					LCD_WriteString(XX);
+					break;
+				case 8: // SETMM
+					num_to_char_2(curr_date_time.month);
+					LCD_WriteString(XX);
+					break;
+				case 9: // SETDD
+					num_to_char_2(curr_date_time.day);
+					LCD_WriteString(XX);
+					break;
+				case 10: // SETHR
+					num_to_char_2(curr_date_time.hours);
+					LCD_WriteString(XX);
+					break;
+				case 11: // SETMIN
+					num_to_char_2(curr_date_time.minutes);
+					LCD_WriteString(XX);
+					break;
 				}
-
 				LCD_SetCursor(50);
 				LCD_SendCommand(UNDERLINE_ON);
 				LCD_SendCommand(BLINK_ON);
@@ -343,6 +373,41 @@ int main(void)
 							}
 							else inputError = 1;
 							break;
+						case 6: // Time set: the clock accepts "wrong" overwritten dates, but will not reach them "on its own;"
+								// Assume that the user sets all fields in succession as listed in the menu, removing the possibility of erroneous settings
+								// (Possibly failing in proximity to special cases, e.g. at the turn of a month)
+							lids = !(lids); // No errors possible in the toggling of a flag
+							if (lids) { // In the case that the lids ARE PUT BACK ON, a reservoir level check is done right away
+								read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
+							}
+							break;
+						case 7:
+							DS3231_SetYear((uint16_t)inputNum); // No errors possible for "years" 00 thru 99
+							break;
+						case 8:
+							// Constrain to months 01 thru 12
+							inputError = (inputNum < 1 || inputNum > 12);
+							if (!inputError) DS3231_SetMonth(inputNum);
+							break;
+						case 9:
+							// Constrain to range of days 01 thru 31 (31 as the "highest possible choice")
+							inputError = (inputNum < 1 || inputNum > 31);
+							if (!inputError) DS3231_SetDate(inputNum);
+							break;
+						case 10:
+							// For convenience, leave military formatting
+							// Constrain to hours 0-23
+							inputError = (inputNum > 23);
+							if (!inputError) DS3231_SetHour(inputNum);
+							break;
+						case 11:
+							// Constrain to minutes 0-59
+							inputError = (inputNum > 59);
+							if (!inputError) {
+								DS3231_SetMinute(inputNum);
+								DS3231_SetSecond(0); // Without second specification, at least allow specification to the "start of the minute"
+							}
+							break;
 						}
 
 						if (readKey == 'B') break; // "Immediate exit"
@@ -352,7 +417,7 @@ int main(void)
 							LCD_WriteString("RETRY!");
 						}
 						else { // Manipulate readKey for "manual bail-out" to go back through the menu for the same state, writing the newly assigned value to the screen's "CURRENT" field
-							menuState += 5; // "Pre-undo" forwards shift in menu
+							menuState--; // "Pre-undo" forwards shift in menu
 							readKey = 'A';
 							break;
 						}
