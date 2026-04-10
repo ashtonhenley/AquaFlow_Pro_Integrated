@@ -37,8 +37,6 @@ Core/Src/physical_controls.o: ../Core/Src/physical_controls.c \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_tim_ex.h \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart.h \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart_ex.h \
- ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_usart.h \
- ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_usart_ex.h \
  ../Core/Inc/mcp23017.h
 ../Core/Inc/physical_controls.h:
 ../Core/Inc/main.h:
@@ -79,6 +77,4 @@ Core/Src/physical_controls.o: ../Core/Src/physical_controls.c \
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_tim_ex.h:
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart.h:
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart_ex.h:
-../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_usart.h:
-../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_usart_ex.h:
 ../Core/Inc/mcp23017.h:

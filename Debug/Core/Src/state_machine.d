@@ -37,8 +37,6 @@ Core/Src/state_machine.o: ../Core/Src/state_machine.c \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_tim_ex.h \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart.h \
  ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart_ex.h \
- ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_usart.h \
- ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_usart_ex.h \
  ../Core/Inc/DS3231(CLK).h ../Core/Inc/state_logic.h \
  ../Core/Inc/physical_controls.h
 ../Core/Inc/state_machine.h:
@@ -80,8 +78,6 @@ Core/Src/state_machine.o: ../Core/Src/state_machine.c \
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_tim_ex.h:
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart.h:
 ../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_uart_ex.h:
-../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_usart.h:
-../Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_hal_usart_ex.h:
 ../Core/Inc/DS3231(CLK).h:
 ../Core/Inc/state_logic.h:
 ../Core/Inc/physical_controls.h:

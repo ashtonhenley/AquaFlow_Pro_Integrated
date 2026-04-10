@@ -41,18 +41,23 @@ extern ScheduledWaterChange sched_date_time;
 extern OutOfRangeValues rangevalues;
 // All external variables
 extern bool water_change_flag;
-
+extern bool filling_flag;
+extern bool res_full_flag;
 static uint32_t fill_elapsed = 0;   // total pump runtime accumulated
 static uint32_t fill_start_sod = 0; // start time of the current run
-
+uint32_t delta = 0;			  // time elapsed since last check
 uint8_t flow_rate = 21;   // Time it takes to pump 1 gallon in seconds
+bool overheat = 0;
 
 float FAN_ON_TEMP;
 float FAN_OFF_TEMP;
 static bool fan_on = 0;
+static bool inbound_pump_on = 0;
 
+const uint8_t minimum_tank_val = 12; // Distance between sensor and water once water has been drained
+const uint8_t maximum_tank_val = 2; // Distance between sensor and water once water has been pumped back into the tank
+const uint8_t minimum_res_val = 4; // Distance between sensor and water to allow for a water change to begin
 
-#define DEG 0xDF
 extern uint8_t schedule;
 
 extern bool manualStartFlag;
@@ -107,6 +112,9 @@ uint32_t get_seconds_of_day(void)
 void idle_state(){
 
 	static uint32_t idle_sod = 0;
+	bool time_reached;
+	char temp_buf[6];
+	char ph_buf[6];
 	// Initialize range values for fan
 
 	if(state_entry){
@@ -114,10 +122,9 @@ void idle_state(){
 		idle_sod = get_seconds_of_day();
 		FAN_ON_TEMP = rangevalues.max_temp;
 		FAN_OFF_TEMP = rangevalues.max_temp - 2;
-		state_leave();
 	}
 	// Check... have we reached our time?
-	bool time_reached = timer_expired(
+	time_reached = timer_expired(
 			idle_sod,
 			1u,     // Time in seconds that determines the interval of time_reached, also controls how often we sample sensors
 			curr_date_time.hours,
@@ -133,25 +140,22 @@ void idle_state(){
 			screenSwitch = 0;
 		}
 
-		LCD_SendCommand(CLEAR);
-
-		LCD_WriteString("TMPMAIN   ");
 		num_to_char_4(sensorvalues.temperature_tank);
-		LCD_WriteString(XXdXX);
-		LCD_WriteCharacter(' ');
-		LCD_WriteCharacter(DEG);
-		LCD_WriteCharacter('F');
-
-		LCD_SetCursor(20);
-		LCD_WriteString("TRBDTY    ");
+		temp_buf[0] = XXdXX[0];
+		temp_buf[1] = XXdXX[1];
+		temp_buf[2] = XXdXX[2];
+		temp_buf[3] = XXdXX[3];
+		temp_buf[4] = XXdXX[4];
+		temp_buf[5] = '\0';
 		num_to_char_2(sensorvalues.turbidity_value);
-		LCD_WriteString(XX);
-		LCD_WriteString(" NTU");
-
-		LCD_SetCursor(40);
-		LCD_WriteString("PH        ");
 		num_to_char_4(sensorvalues.ph_value);
-		LCD_WriteString(XXdXX);
+		ph_buf[0] = XXdXX[0];
+		ph_buf[1] = XXdXX[1];
+		ph_buf[2] = XXdXX[2];
+		ph_buf[3] = XXdXX[3];
+		ph_buf[4] = XXdXX[4];
+		ph_buf[5] = '\0';
+		LCD_ShowIdleOverview(temp_buf, XX, ph_buf);
 
 		menuExit = 0;
 		state_entry = 0;
@@ -159,44 +163,21 @@ void idle_state(){
 	}
 
 	if (keypadIter > 4999) { // 5 sec between each screen refresh
-		LCD_SetCursor(60);
-		uint8_t hr;
 		switch (screenSwitch) {
 		case 0: // Current time: 	|   XX/XX XX:XX XM   |
-
-			LCD_WriteString("   ");
-			num_to_char_2(curr_date_time.month);
-			LCD_WriteString(XX);
-			LCD_WriteCharacter('/');
-			num_to_char_2(curr_date_time.day);
-			LCD_WriteString(XX);
-			LCD_WriteCharacter(' ');
-			hr = curr_date_time.hours % 12;
-			if (hr == 0) LCD_WriteString("12");
-			else num_to_char_2(hr);
-			LCD_WriteString(XX);
-			LCD_WriteCharacter(':');
-			num_to_char_2(curr_date_time.minutes);
-			LCD_WriteString(XX);
-			LCD_WriteCharacter(' ');
-			if (curr_date_time.hours < 12) LCD_WriteString("AM");
-			else LCD_WriteString("PM");
+			LCD_ShowIdleCurrentTime(
+					curr_date_time.month,
+					curr_date_time.day,
+					curr_date_time.hours,
+					curr_date_time.minutes
+			);
 			break;
 		case 1: // Scheduled time:	|SCHEDULED XX/XX XXXM|
-
-			LCD_WriteString("SCHEDULED ");
-			num_to_char_2(sched_date_time.month);
-			LCD_WriteString(XX);
-			LCD_WriteCharacter('/');
-			num_to_char_2(sched_date_time.day);
-			LCD_WriteString(XX);
-			LCD_WriteCharacter(' ');
-			hr = sched_date_time.hours % 12;
-			if (hr == 0) LCD_WriteString("12");
-			else num_to_char_2(hr);
-			LCD_WriteString(XX);
-			if (sched_date_time.hours < 12) LCD_WriteString("AM");
-			else LCD_WriteString("PM");
+			LCD_ShowIdleScheduledTime(
+					sched_date_time.month,
+					sched_date_time.day,
+					sched_date_time.hours
+			);
 			break;
 		}
 		keypadIter = 0;
@@ -210,7 +191,10 @@ void idle_state(){
 		sample_temperature_sensors();
 		check_turbidity(&sensorvalues.turbidity_value);
 		read_ph(&sensorvalues.ph_value);
-		read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
+		// Only read water level sensors if we aren't filling the reservoir.
+		if(filling_flag == 0){
+			read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
+		}
 		// Need to check if these sensors values are out of range
 		// check_envir_flags();
 		is_flag_high();
@@ -241,10 +225,12 @@ void water_res_state(){
 	read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 
 	if (state_entry) {
-		LCD_SendCommand(CLEAR);
-		LCD_WriteString("CHANGING: RESCHECK");
-		LCD_SetCursor(20);
-		LCD_WriteString("TARGET    1 gal");
+		if(res_full_flag){
+			state_entry = 1;
+			current_state = AQUA_DRAIN_STATE;
+			return;
+		}
+		LCD_ShowReservoirCheckScreen();
 		// Need to implement a waiting phase if we're out of range.
 
 		state_entry = 0;
@@ -252,15 +238,13 @@ void water_res_state(){
 		state_entry = 0;
 	}
 	if (keypadIter > 165) { // 166 ms (1/6 sec) between refreshes
-		LCD_SetCursor(40);
-		LCD_WriteString("PROGRESS  ");
 		num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f)); // Percentage = 100 * level/30
-		LCD_WriteString(XX);
-		LCD_WriteCharacter('%');
+		// This value above should already be a percentage *** CHECK
+		LCD_ShowReservoirProgress(XX);
 		keypadIter = 0;
 	}
 	// If water level is sufficient (30%), move to water drain state
-	if (sensorvalues.waterlevel_res > 30)
+	if (sensorvalues.waterlevel_res < minimum_res_val)
 	{
 		current_state = AQUA_DRAIN_STATE;
 		state_enter();
@@ -269,18 +253,15 @@ void water_res_state(){
 
 void water_drain_state(){
 	static uint32_t drain_sod = 0;
+	bool time_reached;
+	char elapsed_buf[6];
 
 	if (state_entry)
 	{
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
 		// Set outbound pump high
-		LCD_SendCommand(CLEAR);
-		LCD_WriteString("CHANGING: DRAIN");
-		LCD_SetCursor(20);
-		LCD_WriteString("TARGET    1 gal");
-		LCD_SetCursor(40);
-		LCD_WriteString("ESTIMATE  21 sec");
-		LCD_SetCursor(60);
-		LCD_WriteString("ELAPSED         sec");
+		LCD_ShowDrainScreen(flow_rate);
 		outbound_pump_high();
 
 		// Get start time of outbound pump
@@ -289,14 +270,18 @@ void water_drain_state(){
 		keypadIter = 0;
 		estTime = 0;
 
-
 		state_leave();
 	}
 	if (keypadIter > 165) {
 		estTime += 0.1666f;
 		num_to_char_4(estTime);
-		LCD_SetCursor(70);
-		LCD_WriteString(XXdXX);
+		elapsed_buf[0] = XXdXX[0];
+		elapsed_buf[1] = XXdXX[1];
+		elapsed_buf[2] = XXdXX[2];
+		elapsed_buf[3] = XXdXX[3];
+		elapsed_buf[4] = XXdXX[4];
+		elapsed_buf[5] = '\0';
+		LCD_ShowElapsedTime(elapsed_buf);
 		keypadIter = 0;
 	}
 	if (state_entry == 0)
@@ -305,7 +290,7 @@ void water_drain_state(){
 		read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 
 		// Check to see if flow rate in seconds has been reached
-		bool time_reached = timer_expired(
+		time_reached = timer_expired(
 				drain_sod,
 				flow_rate,
 				curr_date_time.hours,
@@ -316,7 +301,7 @@ void water_drain_state(){
 		/* If we have reached one gallon drained or if the level of the tank is lower than 20%,
 		 * turn off outbound pump and move to heating state
 		 */
-		if (time_reached || (sensorvalues.waterlevel_tank <= 20))
+		if (time_reached || (sensorvalues.waterlevel_tank >= minimum_tank_val))
 		{
 			outbound_pump_low();
 
@@ -327,29 +312,33 @@ void water_drain_state(){
 }
 
 void heating_state(){
+	char temp_res[6];
+	char temp_tank[6];
 	// Sample both temperature sensors
 	sample_temperature_sensors();
 	if (state_entry) {
 		state_entry = 0;
 		keypadIter = 1000;
-		LCD_SendCommand(CLEAR);
-		LCD_WriteString("CHANGING: HEATING");
-		LCD_SetCursor(20);
-		LCD_WriteString("TEMPRES          ");
-		LCD_WriteCharacter(DEG);
-		LCD_WriteCharacter('F');
-		LCD_SetCursor(40);
-		LCD_WriteString("TEMPMAIN        ");
-		LCD_WriteCharacter(DEG);
-		LCD_WriteCharacter('F');
+		LCD_ShowHeatingScreen();
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
 	}
 	if (keypadIter > 999) {
-		LCD_SetCursor(30);
 		num_to_char_4(sensorvalues.temperature_res);
-		LCD_WriteString(XXdXX);
-		LCD_SetCursor(50);
+		temp_res[0] = XXdXX[0];
+		temp_res[1] = XXdXX[1];
+		temp_res[2] = XXdXX[2];
+		temp_res[3] = XXdXX[3];
+		temp_res[4] = XXdXX[4];
+		temp_res[5] = '\0';
 		num_to_char_4(sensorvalues.temperature_tank);
-		LCD_WriteString(XXdXX);
+		temp_tank[0] = XXdXX[0];
+		temp_tank[1] = XXdXX[1];
+		temp_tank[2] = XXdXX[2];
+		temp_tank[3] = XXdXX[3];
+		temp_tank[4] = XXdXX[4];
+		temp_tank[5] = '\0';
+		LCD_ShowHeatingTemps(temp_res, temp_tank);
 		keypadIter = 0;
 	}
 	// Calculate the difference between the two temperatures
@@ -361,7 +350,7 @@ void heating_state(){
 	 * the heating element still being hot after being turned off
 	 */
 
-	if (diff >= 0.0f && fabsf(diff) <= 1.0f)
+	if (diff >= 0.0f && fabsf(diff) <= 2.0f)
 	{
 		heater_low();
 		circulating_pump_low();
@@ -374,72 +363,102 @@ void heating_state(){
 		/* Turn on heater & circulating pump
 		 * MCP23017 is setting PA0 High
 		 */
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
 		heater_high();
 		circulating_pump_high();
 	}
 }
 
 void water_fill_state(){
+	char elapsed_buf[6];
 	// Only perform these commands once
+
+
 	if (state_entry)
 	{
 		state_entry = 0;
 		keypadIter = 0;
 		estTime = 0;
 
-		LCD_SendCommand(CLEAR);
-		LCD_WriteString("CHANGING: FILL");
-		LCD_SetCursor(20);
-		LCD_WriteString("TARGET    1 gal");
-		LCD_SetCursor(40);
-		LCD_WriteString("ESTIMATE  21 sec");
-		LCD_SetCursor(60);
-		LCD_WriteString("ELAPSED         sec");
+		// Set inbound pump & flag high
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
+		LCD_ShowFillScreen(flow_rate);
 		inbound_pump_high();
-
+		inbound_pump_on = 1;
 		fill_start_sod = get_seconds_of_day();
-
 		state_leave();
 	}
 	if (keypadIter > 165) {
 		estTime += 0.1666f;
 		num_to_char_4(estTime);
-		LCD_SetCursor(70);
-		LCD_WriteString(XXdXX);
+		elapsed_buf[0] = XXdXX[0];
+		elapsed_buf[1] = XXdXX[1];
+		elapsed_buf[2] = XXdXX[2];
+		elapsed_buf[3] = XXdXX[3];
+		elapsed_buf[4] = XXdXX[4];
+		elapsed_buf[5] = '\0';
+		LCD_ShowElapsedTime(elapsed_buf);
 		keypadIter = 0;
 	}
 	// Compute time once per loop
 	uint32_t curr_sod = get_seconds_of_day();
 
-	uint32_t elapsed = (curr_sod >= fill_start_sod)
-                				? (curr_sod - fill_start_sod)
-                						: (86400u - fill_start_sod + curr_sod);   // midnight rollover safe
+	uint32_t delta = (curr_sod >= fill_start_sod)
+		? (curr_sod - fill_start_sod)
+		: (86400u - fill_start_sod + curr_sod);
 
+	// always update reference
+	fill_start_sod = curr_sod;
+
+	// only accumulate when pump is ON
+	if (inbound_pump_on) {
+		fill_elapsed += delta;
+	}
 	// Monitor temperatures while filling
 	sample_temperature_sensors();
+
 	float diff = sensorvalues.temperature_res - sensorvalues.temperature_tank;
 
 	// If temp mismatch gets too large, pause filling and go back to heating
-	if (diff < -1.0f || diff > 1.0f)
+	if (diff < -1.0f)
 	{
+		overheat = 0;
 		inbound_pump_low();
-
-		fill_elapsed += elapsed;   // accumulate pump runtime so far
-
+		inbound_pump_on = 0;
 		current_state = HEATING_STATE;
 		state_enter();
+		return;
 	}
 
+	if(diff > 1.0f && overheat == 0){
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
+		inbound_pump_low();
+		inbound_pump_on = 0;
+		overheat = 1;
+		return;
+	}
+	if((diff < 1.0f) && overheat == 1){
+		// Delay for ensuring pumps don't shock PSU
+		HAL_Delay(2000);
+		overheat = 0;
+		inbound_pump_high();
+		inbound_pump_on = 1;
+		return;
+
+	}
 	// Continue fill checks
 	read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 
 	// Does the time elapsed now plus any previous pump time add to our flow rate?
-	bool time_reached = ((fill_elapsed + elapsed) >= flow_rate);
+	bool time_reached = (fill_elapsed >= flow_rate);
 
-	if (time_reached || (sensorvalues.waterlevel_tank >= 80))
+	if (time_reached || (sensorvalues.waterlevel_tank <= maximum_tank_val))
 	{
 		inbound_pump_low();
-
+		inbound_pump_on = 0;
 		fill_elapsed = 0; // reset for next water change
 
 		current_state     = IDLE_STATE;

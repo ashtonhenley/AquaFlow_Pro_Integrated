@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdio.h>
 #include "LCD.h"
 #include "main.h"
 
@@ -33,6 +34,20 @@ extern I2C_HandleTypeDef hi2c1;
 #define CURSOR_HOME 0x46 // To R1C1; 1.5 ms
 #define BACKSPACE 0x4E // Moves the cursor to the previous column (to the left) and deletes the character on that column
 #define CLEAR 0x51 // Clears the screen and moves the cursor to R1C1. 1.5 ms
+#define DEG 0xDF
+
+static void LCD_Write12Hour(uint8_t hours) {
+	uint8_t hr = hours % 12u;
+	char hr_buf[3];
+
+	if (hr == 0u) {
+		LCD_WriteString("12");
+		return;
+	}
+
+	snprintf(hr_buf, sizeof(hr_buf), "%02u", hr);
+	LCD_WriteString(hr_buf);
+}
 
  // - Functions -
 
@@ -84,10 +99,143 @@ void LCD_Init(void) {
 
 }
 
+
+
 void LCD_WriteCharacter(char c) {
 	HAL_I2C_Master_Transmit(&hi2c1, LCD_ADDR, (uint8_t*)&c, 1, HAL_MAX_DELAY);
 }
 
-void LCD_WriteString(char* str) {
+void LCD_WriteString(const char* str) {
 	HAL_I2C_Master_Transmit(&hi2c1, LCD_ADDR, (uint8_t*)str, strlen(str), HAL_MAX_DELAY);
+}
+
+void LCD_ShowIdleOverview(const char* tank_temp, const char* turbidity, const char* ph_value) {
+	LCD_SendCommand(CLEAR);
+
+	LCD_WriteString("TMPMAIN   ");
+	LCD_WriteString(tank_temp);
+	LCD_WriteCharacter(' ');
+	LCD_WriteCharacter(DEG);
+	LCD_WriteCharacter('F');
+
+	LCD_SetCursor(20);
+	LCD_WriteString("TRBDTY    ");
+	LCD_WriteString(turbidity);
+	LCD_WriteString(" NTU");
+
+	LCD_SetCursor(40);
+	LCD_WriteString("PH        ");
+	LCD_WriteString(ph_value);
+}
+
+void LCD_ShowIdleCurrentTime(uint8_t month, uint8_t day, uint8_t hours, uint8_t minutes) {
+	char buf[3];
+
+	LCD_SetCursor(60);
+	LCD_WriteString("   ");
+
+	snprintf(buf, sizeof(buf), "%02u", month);
+	LCD_WriteString(buf);
+	LCD_WriteCharacter('/');
+
+	snprintf(buf, sizeof(buf), "%02u", day);
+	LCD_WriteString(buf);
+	LCD_WriteCharacter(' ');
+
+	LCD_Write12Hour(hours);
+	LCD_WriteCharacter(':');
+
+	snprintf(buf, sizeof(buf), "%02u", minutes);
+	LCD_WriteString(buf);
+	LCD_WriteCharacter(' ');
+	LCD_WriteString((hours < 12u) ? "AM" : "PM");
+}
+
+void LCD_ShowIdleScheduledTime(uint8_t month, uint8_t day, uint8_t hours) {
+	char buf[3];
+
+	LCD_SetCursor(60);
+	LCD_WriteString("SCHEDULED ");
+
+	snprintf(buf, sizeof(buf), "%02u", month);
+	LCD_WriteString(buf);
+	LCD_WriteCharacter('/');
+
+	snprintf(buf, sizeof(buf), "%02u", day);
+	LCD_WriteString(buf);
+	LCD_WriteCharacter(' ');
+
+	LCD_Write12Hour(hours);
+	LCD_WriteString((hours < 12u) ? "AM" : "PM");
+}
+
+void LCD_ShowReservoirCheckScreen(void) {
+	LCD_SendCommand(CLEAR);
+	LCD_WriteString("CHANGING: RESCHECK");
+	LCD_SetCursor(20);
+	LCD_WriteString("TARGET    1 gal");
+}
+
+void LCD_ShowReservoirProgress(const char* progress) {
+	LCD_SetCursor(40);
+	LCD_WriteString("PROGRESS  ");
+	LCD_WriteString(progress);
+	LCD_WriteCharacter('%');
+}
+
+void LCD_ShowDrainScreen(uint8_t estimate_seconds) {
+	char buf[4];
+
+	LCD_SendCommand(CLEAR);
+	LCD_WriteString("CHANGING: DRAIN");
+	LCD_SetCursor(20);
+	LCD_WriteString("TARGET    1 gal");
+	LCD_SetCursor(40);
+	LCD_WriteString("ESTIMATE  ");
+	snprintf(buf, sizeof(buf), "%u", estimate_seconds);
+	LCD_WriteString(buf);
+	LCD_WriteString(" sec");
+	LCD_SetCursor(60);
+	LCD_WriteString("ELAPSED         sec");
+}
+
+void LCD_ShowHeatingScreen(void) {
+	LCD_SendCommand(CLEAR);
+	LCD_WriteString("CHANGING: HEATING");
+	LCD_SetCursor(20);
+	LCD_WriteString("TEMPRES          ");
+	LCD_WriteCharacter(DEG);
+	LCD_WriteCharacter('F');
+	LCD_SetCursor(40);
+	LCD_WriteString("TEMPMAIN        ");
+	LCD_WriteCharacter(DEG);
+	LCD_WriteCharacter('F');
+}
+
+void LCD_ShowHeatingTemps(const char* reservoir_temp, const char* tank_temp) {
+	LCD_SetCursor(30);
+	LCD_WriteString(reservoir_temp);
+	LCD_SetCursor(50);
+	LCD_WriteString(tank_temp);
+}
+
+void LCD_ShowFillScreen(uint8_t estimate_seconds) {
+	char buf[4];
+
+	LCD_SendCommand(CLEAR);
+	LCD_WriteString("CHANGING: FILL");
+	LCD_SetCursor(20);
+	LCD_WriteString("TARGET    1 gal");
+	LCD_SetCursor(40);
+	LCD_WriteString("ESTIMATE  ");
+	snprintf(buf, sizeof(buf), "%u", estimate_seconds);
+	LCD_WriteString(buf);
+	LCD_WriteString(" sec");
+	LCD_SetCursor(60);
+	LCD_WriteString("ELAPSED         sec");
+}
+
+void LCD_ShowElapsedTime(const char* elapsed_time) {
+	LCD_SetCursor(70);
+	LCD_WriteString(elapsed_time);
 }
