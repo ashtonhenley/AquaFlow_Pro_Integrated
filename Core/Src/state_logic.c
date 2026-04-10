@@ -208,6 +208,7 @@ void idle_state(){
 			read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 		}
 		// Need to check if these sensors values are out of range
+		// check_envir_flags();
 		is_flag_high();
 		// Need to check if we have a water change scheduled for this time
 		sched_curr_time();
