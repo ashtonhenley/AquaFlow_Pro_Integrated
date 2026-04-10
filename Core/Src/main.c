@@ -182,10 +182,10 @@ int main(void)
 	DS3231_SetRateSelect(DS3231_1HZ);
 	HAL_ADCEx_Calibration_Start(&hadc1);
 	/*DS3231_SetMonth(4);
-	//DS3231_SetYear(2026);
-	//DS3231_SetDate(9);
-	//DS3231_SetHour(14);
-	//DS3231_SetMinute(10);
+	DS3231_SetYear(2026);
+	DS3231_SetDate(10);
+	DS3231_SetHour(12);
+	DS3231_SetMinute(36);
 	DS3231_SetSecond(0); */
 	// Initalize external GPIO
 	MCP23017_Init(&htd);

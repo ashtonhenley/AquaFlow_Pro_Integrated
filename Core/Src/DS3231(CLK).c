@@ -14,11 +14,11 @@ DateTimeStruct curr_date_time = {0};
 
 // Set scheduled date, will later be set by Interface.
 ScheduledWaterChange sched_date_time = {
-		.day = 9,
+		.day = 10,
 		.month = 4,
 		.year = 26,
-		.minutes = 10,
-		.hours = 14,
+		.minutes = 36,
+		.hours = 12,
 };
 
 

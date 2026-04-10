@@ -7523,7 +7523,7 @@ void sample_temperature_sensors(){
  8003aa8:	20000370 	.word	0x20000370
 
 08003aac <timer_expired>:
-		.hours = 14,
+		.hours = 12,
 };
 
 
@@ -9801,14 +9801,14 @@ int main(void)
  8004996:	4bd5      	ldr	r3, [pc, #852]	@ (8004cec <main+0x3b4>)
  8004998:	0018      	movs	r0, r3
  800499a:	f7ff face 	bl	8003f3a <DS3231_SetYear>
-	DS3231_SetDate(9);
- 800499e:	2009      	movs	r0, #9
+	DS3231_SetDate(10);
+ 800499e:	200a      	movs	r0, #10
  80049a0:	f7ff fa93 	bl	8003eca <DS3231_SetDate>
-	DS3231_SetHour(14);
- 80049a4:	200e      	movs	r0, #14
+	DS3231_SetHour(12);
+ 80049a4:	200c      	movs	r0, #12
  80049a6:	f7ff fb0c 	bl	8003fc2 <DS3231_SetHour>
-	DS3231_SetMinute(10);
- 80049aa:	200a      	movs	r0, #10
+	DS3231_SetMinute(36);
+ 80049aa:	2024      	movs	r0, #36	@ 0x24
  80049ac:	f7ff fb20 	bl	8003ff0 <DS3231_SetMinute>
 	DS3231_SetSecond(0);
  80049b0:	2000      	movs	r0, #0
