@@ -67,7 +67,7 @@ UART_HandleTypeDef huart6;
 
 uint16_t adc_buffer [2] = {0};
 bool water_change_flag = 0; // High when a water change is in progress
-bool lids = 0; // Lids on/off when high/low
+bool lids = 1; // Lids on/off when high/low
 bool res_full_flag = 0; // Indicates that the reservoir "is filled" (per the most recent sensor reading)
 extern const uint8_t minimum_res_val;
 // Create an instance of the SensorValues Struct, initialize to 0
@@ -187,6 +187,9 @@ int main(void)
 	HAL_TIM_Base_Start_IT(&htim2);
 
 	LCD_Init();
+
+	LCD_SendCommand(UNDERLINE_OFF);
+	LCD_SendCommand(BLINK_OFF);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -201,11 +204,6 @@ int main(void)
 		if (startup) {
 			update_schedule();
 			startup = 0;
-		}
-		// Only check for scheduled water change if we're not changing water (or blocked in the navigation menu)
-		if(water_change_flag != 1){
-			sched_curr_time();
-
 		}
 		if (cooldown.cooldown_flag &&
 				timer_expired(cooldown.cooldown_sod, 60u,
@@ -258,7 +256,7 @@ int main(void)
 					LCD_WriteCharacter(DEG);
 					LCD_WriteCharacter('F');
 					break;
-				case 1: // NTUHIGH
+				case 1: // TRBDTY
 					num_to_char_2(rangevalues.turbidity);
 					LCD_WriteString(XX);
 					LCD_WriteString(" NTU");
@@ -277,15 +275,15 @@ int main(void)
 					break;
 				case 5: // START
 					LCD_SetCursor(20);
-					LCD_WriteString((lids) ? "CURRENT   ON" : "CURRENT   OFF");
+					LCD_WriteString("0X)START  1X)UPDATE");
 					LCD_SetCursor(40);
-					LCD_WriteString("XX)TOGGLE");
+					LCD_WriteString("CHOICE    00");
 					break;
 				case 6: // LIDS
 					LCD_SetCursor(20);
-					LCD_WriteString("0X)START  1X)UPDATE");
+					LCD_WriteString((lids) ? "CURRENT   ON" : "CURRENT   OFF");
 					LCD_SetCursor(40);
-					LCD_WriteString("CHOICE");
+					LCD_WriteString("XX)TOGGLE 00");
 					break;
 				case 7: // SETYY
 					num_to_char_2((uint8_t)curr_date_time.year);
@@ -326,7 +324,6 @@ int main(void)
 					readKey = blockForKey(0, 400);
 					switch (readKey) {
 					case 'A':
-						menuState = (menuState + 1) % 6;
 						break;
 					case 'B':
 						break;
@@ -457,7 +454,7 @@ int main(void)
 					LCD_SendCommand(BLINK_OFF);
 					menuExit = 1;
 				}
-				else menuState = (menuState + 1) % 6;
+				else menuState = (menuState + 1) % 12;
 
 			} while (readKey != 'B');
 
@@ -641,9 +638,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 7999;
+  htim2.Init.Prescaler = 799;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 4294967295;
+  htim2.Init.Period = 19;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -920,7 +917,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, KEY_C4_Pin|KEY_C3D4_Pin|KEY_C2_Pin|KEY_C1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(KEY_C1_GPIO_Port, KEY_C1_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, KEY_C2_Pin|KEY_C3_Pin|KEY_C4_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -942,23 +942,24 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : KEY_R4_Pin */
-  GPIO_InitStruct.Pin = KEY_R4_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(KEY_R4_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : KEY_C3_Pin KEY_R2_Pin KEY_R1_Pin */
-  GPIO_InitStruct.Pin = KEY_C3_Pin|KEY_R2_Pin|KEY_R1_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : KEY_C4_Pin KEY_C3D4_Pin KEY_C2_Pin KEY_C1_Pin */
-  GPIO_InitStruct.Pin = KEY_C4_Pin|KEY_C3D4_Pin|KEY_C2_Pin|KEY_C1_Pin;
+  /*Configure GPIO pin : KEY_C1_Pin */
+  GPIO_InitStruct.Pin = KEY_C1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(KEY_C1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : KEY_C2_Pin KEY_C3_Pin KEY_C4_Pin */
+  GPIO_InitStruct.Pin = KEY_C2_Pin|KEY_C3_Pin|KEY_C4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : KEY_R1_Pin KEY_R2_Pin KEY_R3_Pin KEY_R4_Pin */
+  GPIO_InitStruct.Pin = KEY_R1_Pin|KEY_R2_Pin|KEY_R3_Pin|KEY_R4_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */

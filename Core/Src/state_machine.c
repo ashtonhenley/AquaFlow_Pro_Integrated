@@ -38,8 +38,7 @@ void sched_curr_time()
         if (curr_date_time.year    == sched_date_time.year  &&
             curr_date_time.month   == sched_date_time.month &&
             curr_date_time.day     == sched_date_time.day   &&
-            curr_date_time.hours   == sched_date_time.hours &&
-            curr_date_time.minutes == sched_date_time.minutes)
+            curr_date_time.hours   >= sched_date_time.hours)
         {
         	// Reset fan
         	fan_low();
@@ -92,7 +91,6 @@ void update_schedule() {
 				.day = offDay,
 				.month = offMonth,
 				.year = offYear,
-				.minutes = curr_date_time.minutes,
 				.hours = curr_date_time.hours
 	};
 

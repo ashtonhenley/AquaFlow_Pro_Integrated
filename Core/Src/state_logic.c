@@ -20,8 +20,8 @@
 #include "LCD.h"
 #include "keypad.h"
 #include <stdio.h>
-// Defines going into the beginning of the next state
-static uint8_t state_entry = 1;
+// High "heading into" the next state
+static uint8_t state_entry = 1; // High on startup (for "entry" into the idle state)
 
 // I2C Handles
 extern I2C_HandleTypeDef hi2c1;
@@ -113,7 +113,7 @@ uint32_t get_seconds_of_day(void)
 
 void idle_state(){
 
-	// In the case of a manual water change trigger, bail out of processing while
+	// Bail out in the case of a manual water change
 	if (manualStartFlag){
 		water_change_flag = 1;
 		current_state = WATER_RES_STATE;
@@ -126,8 +126,8 @@ void idle_state(){
 	bool time_reached;
 	char temp_buf[6];
 	char ph_buf[6];
-	// Initialize range values for fan
 
+	// Initialize range values for fan
 	if(state_entry){
 		// Get the current time
 		idle_sod = get_seconds_of_day();
@@ -137,67 +137,13 @@ void idle_state(){
 	// Check... have we reached our time?
 	time_reached = timer_expired(
 			idle_sod,
-			1u,     // Time in seconds that determines the interval of time_reached, also controls how often we sample sensors
+			4u,     // Time in seconds that determines the interval of time_reached, also controls how often we sample sensors
 			curr_date_time.hours,
 			curr_date_time.minutes,
 			curr_date_time.seconds
 	);
 
-	// Interface: display idle mode screen with (up-to-date) relevant information. To be done only upon state entry (+ out of the menu) or when sensor values are updated;
-	// furthermore, a call after sensing-related processing has occurred allows for ability to prevent a display routine "right before" a sensed/scheduled change occurs
-	if (menuExit || state_entry || time_reached) {
-
-		if (menuExit || state_entry) {
-			keypadIter = 5000;
-			screenSwitch = 0;
-		}
-
-		num_to_char_4(sensorvalues.temperature_tank);
-		temp_buf[0] = XXdXX[0];
-		temp_buf[1] = XXdXX[1];
-		temp_buf[2] = XXdXX[2];
-		temp_buf[3] = XXdXX[3];
-		temp_buf[4] = XXdXX[4];
-		temp_buf[5] = '\0';
-		num_to_char_2(sensorvalues.turbidity_value);
-		num_to_char_4(sensorvalues.ph_value);
-		ph_buf[0] = XXdXX[0];
-		ph_buf[1] = XXdXX[1];
-		ph_buf[2] = XXdXX[2];
-		ph_buf[3] = XXdXX[3];
-		ph_buf[4] = XXdXX[4];
-		ph_buf[5] = '\0';
-		LCD_ShowIdleOverview(temp_buf, XX, ph_buf);
-
-		menuExit = 0;
-		state_maintain();
-
-	}
-
-	if (keypadIter > 4999) { // 5 sec between each screen refresh
-		switch (screenSwitch) {
-		case 0: // Current time: 	|   XX/XX XX:XX XM   |
-			LCD_ShowIdleCurrentTime(
-					curr_date_time.month,
-					curr_date_time.day,
-					curr_date_time.hours,
-					curr_date_time.minutes
-			);
-			break;
-		case 1: // Scheduled time:	|SCHEDULED XX/XX XXXM|
-			LCD_ShowIdleScheduledTime(
-					sched_date_time.month,
-					sched_date_time.day,
-					sched_date_time.hours
-			);
-			break;
-		}
-		keypadIter = 0;
-		screenSwitch = (screenSwitch + 1) % 2;
-	}
-
-
-	if (time_reached)
+	if (state_entry || time_reached)
 	{
 		// If it's time to sample sensors, take samples
 		sample_temperature_sensors();
@@ -208,14 +154,12 @@ void idle_state(){
 			read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 		}
 		// Need to check if these sensors values are out of range
-		// check_envir_flags();
 		is_flag_high();
-		// Need to check if we have a water change scheduled for this time
-		sched_curr_time();
 
-		// Reset our start time
-		idle_sod = get_seconds_of_day();
+		// Check for a scheduled change
+		sched_curr_time();
 	}
+	if (time_reached) idle_sod = get_seconds_of_day();
 
 	// At this point, the remaining parts of the routine can be bailed out of if a water change is slated to begin
 	if (water_change_flag) return;
@@ -239,10 +183,8 @@ void idle_state(){
 	// furthermore, a call after sensing-related processing has occurred allows for ability to prevent a display routine "right before" a sensed/scheduled change occurs (see above)
 	if (menuExit || state_entry || time_reached) {
 
-		if (menuExit || state_entry) {
-			keypadIter = 5000;
-			screenSwitch = 0;
-		}
+		if (menuExit || state_entry) screenSwitch = 0;
+		if (time_reached) screenSwitch = (screenSwitch + 1) % 2;
 
 		num_to_char_4(sensorvalues.temperature_tank);
 		temp_buf[0] = XXdXX[0];
@@ -264,9 +206,6 @@ void idle_state(){
 		menuExit = 0;
 		state_maintain();
 
-	}
-
-	if (keypadIter > 4999) { // 5 sec between each screen refresh
 		switch (screenSwitch) {
 		case 0: // Current time: 	|   XX/XX XX:XX XM   |
 			LCD_ShowIdleCurrentTime(
@@ -284,8 +223,7 @@ void idle_state(){
 			);
 			break;
 		}
-		keypadIter = 0;
-		screenSwitch = (screenSwitch + 1) % 2;
+
 	}
 
 }
@@ -295,8 +233,9 @@ void water_res_state(){
 	if (state_entry) {
 
 		if(res_full_flag && lids){
-			state_enter();
+			res_full_flag = 0;
 			current_state = AQUA_DRAIN_STATE;
+			state_enter();
 			return;
 		}
 		LCD_ShowReservoirCheckScreen();
@@ -304,26 +243,27 @@ void water_res_state(){
 		state_maintain();
 
 	}
-
-	// "Check routine" - gauge water level after every user input (assumption: lids closed, reservoir filled. Can only truly verify the latter)
-	if (!res_full_flag || !lids) {
+	else {
 		// Lids may not be on heading into routine for the first time; outside of this, read (e.g. to obtain new progress %)
 		if (lids) read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 		num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f)); // Percentage = 100 * level/30
 		LCD_ShowReservoirProgress(XX);
 
-		LCD_SetCursor(80);
+		LCD_SetCursor(60);
 		LCD_WriteString("#)CONFIRM ");
 
 		HAL_Delay(400);
 		char k = '0';
 		while (k != '#') k = Keypad_ReadDebouncedKeyPress();
 
+		// "Check routine" - gauge water level after every user input (assumption: lids closed, reservoir filled. Can only truly verify the latter)
+
 		lids = 1;
+
+		num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f));
 
 		while (sensorvalues.waterlevel_res >= minimum_res_val) {
 
-			read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 			num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f)); // Percentage = 100 * level/30
 			LCD_ShowReservoirProgress(XX);
 			LCD_SetCursor(60);
@@ -332,11 +272,13 @@ void water_res_state(){
 			HAL_Delay(400);
 			char k = '0';
 			while (k != '#') k = Keypad_ReadDebouncedKeyPress();
+
+			read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 		}
 
 	}
 
-	res_full_flag = 1;
+	res_full_flag = 0;
 	current_state = AQUA_DRAIN_STATE;
 	state_enter();
 }

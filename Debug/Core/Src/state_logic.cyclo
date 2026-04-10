@@ -3,8 +3,8 @@
 ../Core/Src/state_logic.c:100:6:state_enter	1
 ../Core/Src/state_logic.c:103:6:state_maintain	1
 ../Core/Src/state_logic.c:107:10:get_seconds_of_day	1
-../Core/Src/state_logic.c:114:6:idle_state	28
-../Core/Src/state_logic.c:292:6:water_res_state	10
-../Core/Src/state_logic.c:343:6:water_drain_state	6
-../Core/Src/state_logic.c:403:6:heating_state	5
-../Core/Src/state_logic.c:462:6:water_fill_state	12
+../Core/Src/state_logic.c:114:6:idle_state	21
+../Core/Src/state_logic.c:231:6:water_res_state	8
+../Core/Src/state_logic.c:286:6:water_drain_state	6
+../Core/Src/state_logic.c:346:6:heating_state	5
+../Core/Src/state_logic.c:405:6:water_fill_state	12
