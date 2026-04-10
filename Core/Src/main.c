@@ -65,12 +65,11 @@ UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
 
-// Turbidity sensor on channel 1, pH on channel 2
 uint16_t adc_buffer [2] = {0};
-// Water change flag to ensure we don't go back in states
-bool water_change_flag = 0;
-bool res_full_flag = 0; // Indicates that the reservoir "is filled" (per the most recent sensor reading)
+bool water_change_flag = 0; // High when a water change is in progress
 bool lids = 0; // Lids on/off when high/low
+bool res_full_flag = 0; // Indicates that the reservoir "is filled" (per the most recent sensor reading)
+extern const uint8_t minimum_res_val;
 // Create an instance of the SensorValues Struct, initialize to 0
 SensorValues sensorvalues = {0};
 
@@ -90,7 +89,7 @@ uint8_t screenSwitch = 0; // Employed for manipulation by timing mechanisms
 
 // Involving the navigation/entry menu
 uint8_t menuState = 0; // thru 11 (% 12)
-char* menuLabels[6] = { "TEMPHIGH", "TRBDTY", "PHLOW", "PHHIGH", "SCHEDULE", "START", "LIDS", "SETYY", "SETMM", "SETDD", "SETHR", "SETMIN" };
+char* menuLabels[12] = { "TEMPHIGH", "TRBDTY", "PHLOW", "PHHIGH", "SCHEDULE", "START", "LIDS", "SETYY", "SETMM", "SETDD", "SETHR", "SETMIN" };
 char inputBuf[2] = {'0','0'};
 uint8_t inputNum; // For decoding of inputted data (characters)
 uint8_t place;
@@ -379,26 +378,37 @@ int main(void)
 							lids = !(lids); // No errors possible in the toggling of a flag
 							if (lids) { // In the case that the lids ARE PUT BACK ON, a reservoir level check is done right away
 								read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
+								res_full_flag = (sensorvalues.waterlevel_res < minimum_res_val);
 							}
 							break;
 						case 7:
 							DS3231_SetYear((uint16_t)inputNum); // No errors possible for "years" 00 thru 99
+							update_schedule();
 							break;
 						case 8:
 							// Constrain to months 01 thru 12
 							inputError = (inputNum < 1 || inputNum > 12);
-							if (!inputError) DS3231_SetMonth(inputNum);
+							if (!inputError) {
+								DS3231_SetMonth(inputNum);
+								update_schedule();
+							}
 							break;
 						case 9:
 							// Constrain to range of days 01 thru 31 (31 as the "highest possible choice")
 							inputError = (inputNum < 1 || inputNum > 31);
-							if (!inputError) DS3231_SetDate(inputNum);
+							if (!inputError) {
+								DS3231_SetDate(inputNum);
+								update_schedule();
+							}
 							break;
 						case 10:
 							// For convenience, leave military formatting
 							// Constrain to hours 0-23
 							inputError = (inputNum > 23);
-							if (!inputError) DS3231_SetHour(inputNum);
+							if (!inputError) {
+								DS3231_SetHour(inputNum);
+								update_schedule();
+							}
 							break;
 						case 11:
 							// Constrain to minutes 0-59
@@ -406,6 +416,7 @@ int main(void)
 							if (!inputError) {
 								DS3231_SetMinute(inputNum);
 								DS3231_SetSecond(0); // Without second specification, at least allow specification to the "start of the minute"
+								update_schedule();
 							}
 							break;
 						}
@@ -423,20 +434,20 @@ int main(void)
 						}
 
 						// "Unaccepted entry" leads to a "full backspace" as in a '*' press - no break
-						case '*':
-							inputBuf[0] = '0';
-							inputBuf[1] = '0';
-							place = 0;
-							LCD_SetCursor(50);
-							LCD_WriteString("00");
-							LCD_SetCursor(50);
-							break;
-						default: // 0 thru
-							inputBuf[place] = readKey;
-							place = 1;
-							LCD_WriteCharacter(readKey);
-							LCD_SetCursor(50 + place);
-							break;
+					case '*':
+						inputBuf[0] = '0';
+						inputBuf[1] = '0';
+						place = 0;
+						LCD_SetCursor(50);
+						LCD_WriteString("00");
+						LCD_SetCursor(50);
+						break;
+					default: // 0 thru 9
+						inputBuf[place] = readKey;
+						place = 1;
+						LCD_WriteCharacter(readKey);
+						LCD_SetCursor(50 + place);
+						break;
 					}
 
 				} while (readKey != 'A' && readKey != 'B');
@@ -579,7 +590,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00503D58;
+  hi2c1.Init.Timing = 0x005086FF;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -909,7 +920,7 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, KEY_C4_Pin|KEY_C3D4_Pin|KEY_C2_Pin|KEY_C1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;
@@ -931,20 +942,20 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PC9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  /*Configure GPIO pin : KEY_R4_Pin */
+  GPIO_InitStruct.Pin = KEY_R4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+  HAL_GPIO_Init(KEY_R4_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PD0 PD1 PD2 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2;
+  /*Configure GPIO pins : KEY_C3_Pin KEY_R2_Pin KEY_R1_Pin */
+  GPIO_InitStruct.Pin = KEY_C3_Pin|KEY_R2_Pin|KEY_R1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PD3 PD4 PD5 PD6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6;
+  /*Configure GPIO pins : KEY_C4_Pin KEY_C3D4_Pin KEY_C2_Pin KEY_C1_Pin */
+  GPIO_InitStruct.Pin = KEY_C4_Pin|KEY_C3D4_Pin|KEY_C2_Pin|KEY_C1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

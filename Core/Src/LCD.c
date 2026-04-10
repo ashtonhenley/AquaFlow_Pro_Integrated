@@ -148,6 +148,7 @@ void LCD_ShowIdleCurrentTime(uint8_t month, uint8_t day, uint8_t hours, uint8_t 
 	snprintf(buf, sizeof(buf), "%02u", minutes);
 	LCD_WriteString(buf);
 	LCD_WriteCharacter(' ');
+
 	LCD_WriteString((hours < 12u) ? "AM" : "PM");
 }
 
@@ -173,12 +174,12 @@ void LCD_ShowReservoirCheckScreen(void) {
 	LCD_SendCommand(CLEAR);
 	LCD_WriteString("CHANGING: RESCHECK");
 	LCD_SetCursor(20);
-	LCD_WriteString("TARGET    1 gal");
+	LCD_WriteString("FILLED & LIDS ON?");
 }
 
 void LCD_ShowReservoirProgress(const char* progress) {
 	LCD_SetCursor(40);
-	LCD_WriteString("PROGRESS  ");
+	LCD_WriteString("PROGRESS");
 	LCD_WriteString(progress);
 	LCD_WriteCharacter('%');
 }
@@ -203,7 +204,7 @@ void LCD_ShowHeatingScreen(void) {
 	LCD_SendCommand(CLEAR);
 	LCD_WriteString("CHANGING: HEATING");
 	LCD_SetCursor(20);
-	LCD_WriteString("TEMPRES          ");
+	LCD_WriteString("TEMPRES         ");
 	LCD_WriteCharacter(DEG);
 	LCD_WriteCharacter('F');
 	LCD_SetCursor(40);

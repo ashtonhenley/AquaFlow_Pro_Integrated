@@ -72,6 +72,8 @@ extern uint16_t keypadIter;
 extern uint8_t screenSwitch;
 float estTime = 0; // For time estimates (to be encoded and displayed)
 
+extern char readKey; // For input required during reservoir check routine
+
 // Helpers for numerical value encoding (see encoding buffers declared in main.c)
 
 // Initializes XX to a string in the format "XX"
@@ -288,34 +290,54 @@ void idle_state(){
 }
 
 void water_res_state(){
-	// Check water level of reservoir
-	read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 
 	if (state_entry) {
-		if(res_full_flag){
+
+		if(res_full_flag && lids){
 			state_enter();
 			current_state = AQUA_DRAIN_STATE;
 			return;
 		}
 		LCD_ShowReservoirCheckScreen();
-		// Need to implement a waiting phase if we're out of range.
 
 		state_maintain();
-		keypadIter = 166;
 
 	}
-	if (keypadIter > 165) { // 166 ms (1/6 sec) between refreshes
+
+	// "Check routine" - gauge water level after every user input (assumption: lids closed, reservoir filled. Can only truly verify the latter)
+	if (!res_full_flag || !lids) {
+		// Lids may not be on heading into routine for the first time; outside of this, read (e.g. to obtain new progress %)
+		if (lids) read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 		num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f)); // Percentage = 100 * level/30
-		// This value above should already be a percentage *** CHECK
 		LCD_ShowReservoirProgress(XX);
-		keypadIter = 0;
+
+		LCD_SetCursor(80);
+		LCD_WriteString("#)CONFIRM ");
+
+		HAL_Delay(400);
+		char k = '0';
+		while (k != '#') k = Keypad_ReadDebouncedKeyPress();
+
+		lids = 1;
+
+		while (sensorvalues.waterlevel_res >= minimum_res_val) {
+
+			read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
+			num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f)); // Percentage = 100 * level/30
+			LCD_ShowReservoirProgress(XX);
+			LCD_SetCursor(60);
+			LCD_WriteString("#)RETRY!  ");
+
+			HAL_Delay(400);
+			char k = '0';
+			while (k != '#') k = Keypad_ReadDebouncedKeyPress();
+		}
+
 	}
-	// If water level is sufficient (30%), move to water drain state
-	if (sensorvalues.waterlevel_res < minimum_res_val)
-	{
-		current_state = AQUA_DRAIN_STATE;
-		state_enter();
-	}
+
+	res_full_flag = 1;
+	current_state = AQUA_DRAIN_STATE;
+	state_enter();
 }
 
 void water_drain_state(){
