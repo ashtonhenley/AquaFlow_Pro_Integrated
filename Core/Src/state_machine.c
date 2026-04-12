@@ -15,6 +15,7 @@ extern ScheduledWaterChange sched_date_time;
 extern CooldownStruct cooldown;
 extern DateTimeStruct curr_date_time;
 extern bool water_change_flag;
+extern bool fan_on;
 extern SensorValues sensorvalues;
 extern uint8_t schedule;
 // Start in idle state
@@ -37,11 +38,11 @@ void sched_curr_time()
         if (curr_date_time.year    == sched_date_time.year  &&
             curr_date_time.month   == sched_date_time.month &&
             curr_date_time.day     == sched_date_time.day   &&
-            curr_date_time.hours   == sched_date_time.hours &&
-            curr_date_time.minutes == sched_date_time.minutes)
+            curr_date_time.hours   >= sched_date_time.hours)
         {
         	// Reset fan
         	fan_low();
+        	fan_on = 0;
             current_state = WATER_RES_STATE;
             state_enter();
             water_change_flag = 1;
@@ -90,7 +91,6 @@ void update_schedule() {
 				.day = offDay,
 				.month = offMonth,
 				.year = offYear,
-				.minutes = curr_date_time.minutes,
 				.hours = curr_date_time.hours
 	};
 
@@ -111,6 +111,7 @@ void is_flag_high()
         {
         	// Reset fan
         	fan_low();
+        	fan_on = 0;
             current_state     = WATER_RES_STATE;
             state_enter();
             water_change_flag = 1;
