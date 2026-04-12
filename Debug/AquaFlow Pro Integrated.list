@@ -9794,7 +9794,7 @@ int main(void)
  8004988:	4bd6      	ldr	r3, [pc, #856]	@ (8004ce4 <main+0x3ac>)
  800498a:	0018      	movs	r0, r3
  800498c:	f003 fbf6 	bl	800817c <HAL_ADCEx_Calibration_Start>
-	DS3231_SetMonth(4);
+	/*DS3231_SetMonth(4);
  8004990:	2004      	movs	r0, #4
  8004992:	f7ff faae 	bl	8003ef2 <DS3231_SetMonth>
 	DS3231_SetYear(2026);
@@ -9810,7 +9810,7 @@ int main(void)
 	DS3231_SetMinute(36);
  80049aa:	2024      	movs	r0, #36	@ 0x24
  80049ac:	f7ff fb20 	bl	8003ff0 <DS3231_SetMinute>
-	DS3231_SetSecond(0);
+	DS3231_SetSecond(0); */
  80049b0:	2000      	movs	r0, #0
  80049b2:	f7ff fb31 	bl	8004018 <DS3231_SetSecond>
 	// Initalize external GPIO
