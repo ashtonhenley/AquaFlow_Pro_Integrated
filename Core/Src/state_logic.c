@@ -140,12 +140,10 @@ void idle_state(){
 	char temp_buf[6];
 	char ph_buf[6];
 
-	// Initialize range values for fan
+
 	if(state_entry){
 		// Get the current time
 		idle_sod = get_seconds_of_day();
-		FAN_ON_TEMP = rangevalues.max_temp;
-		FAN_OFF_TEMP = rangevalues.max_temp - 2;
 	}
 	// Check... have we reached our time?
 	time_reached = timer_expired(
@@ -162,6 +160,7 @@ void idle_state(){
 		sample_temperature_sensors();
 		check_turbidity(&sensorvalues.turbidity_value);
 		read_ph(&sensorvalues.ph_value);
+		// Initialize range values for fan
 		FAN_ON_TEMP = rangevalues.max_temp;
 		FAN_OFF_TEMP = rangevalues.max_temp - 2;
 		// Only read water level sensors if the reservoir lid is necessarily on (e.g. when the reservoir isn't being filled)
