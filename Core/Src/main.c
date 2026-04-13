@@ -342,7 +342,7 @@ int main(void)
 							if (!inputError) rangevalues.max_temp = inputNum;
 							break;
 						case 1:
-							inputError = (inputNum < 5 || inputNum > 25);
+							inputError = (inputNum < 5 || inputNum > 50);
 							if (!inputError) rangevalues.turbidity = inputNum;
 							break;
 						case 2:

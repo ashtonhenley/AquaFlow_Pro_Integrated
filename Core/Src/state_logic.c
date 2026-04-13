@@ -85,6 +85,18 @@ void num_to_char_2(uint8_t num) { // Assumed: num < 100
 	else sprintf(XX, "%u", num);
 }
 
+void num_to_char_trbdty(uint16_t num) { // For turbidity only - cap input integers > 100 at 99
+	if (num > 99) {
+		XX[0] = '9';
+		XX[0] = '9';
+	}
+	else if (num < 10) {
+		XX[0] = '0';
+		sprintf(XX+1, "%u", num);
+	}
+	else sprintf(XX, "%u", num);
+}
+
 // Initializes XXdXX to a string in the format "XX.XX"
 void num_to_char_4(float num) { // Assumed: num < 100
 	XXXX = (uint16_t)(num*100);
