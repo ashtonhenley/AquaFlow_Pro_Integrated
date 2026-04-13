@@ -363,7 +363,7 @@ int main(void)
 								manualStartFlag = 1;
 								readKey = 'B';
 							}
-							else if (inputBuf[1] == '1') {
+							else if (inputBuf[0] == '1') {
 								// Update scheduled change
 								update_schedule();
 							}

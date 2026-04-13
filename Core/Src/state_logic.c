@@ -216,7 +216,7 @@ void idle_state(){
 		ph_buf[3] = XXdXX[3];
 		ph_buf[4] = XXdXX[4];
 		ph_buf[5] = '\0';
-		num_to_char_2(sensorvalues.turbidity_value);
+		num_to_char_trbdty(sensorvalues.turbidity_value);
 		LCD_ShowIdleOverview(temp_buf, XX, ph_buf);
 
 		menuExit = 0;
