@@ -206,7 +206,7 @@ int main(void)
 			startup = 0;
 		}
 		if (cooldown.cooldown_flag &&
-				timer_expired(cooldown.cooldown_sod, 60u,
+				timer_expired(cooldown.cooldown_sod, 300u,
 						curr_date_time.hours,
 						curr_date_time.minutes,
 						curr_date_time.seconds))
@@ -263,7 +263,7 @@ int main(void)
 					break;
 				case 2: // PHLOW
 					num_to_char_4(rangevalues.low_ph);
-					LCD_WriteString(XX);
+					LCD_WriteString(XXdXX);
 					break;
 				case 3: // PHHIGH
 					num_to_char_4(rangevalues.high_ph);

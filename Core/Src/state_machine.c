@@ -27,7 +27,7 @@ OutOfRangeValues rangevalues =
 {
 	.max_temp = 80,
     .turbidity = 15,
-    .low_ph    = 6.5,
+    .low_ph    = 7.5,
     .high_ph   = 8.5
 };
 
@@ -100,7 +100,7 @@ void check_envir_flags()
 {
     tankFlags.low_ph    = (sensorvalues.ph_value < rangevalues.low_ph);
     tankFlags.high_ph   = (sensorvalues.ph_value > rangevalues.high_ph);
-    tankFlags.turbidity = (sensorvalues.turbidity_value > rangevalues.turbidity);
+   // tankFlags.turbidity = (sensorvalues.turbidity_value > rangevalues.turbidity);
 }
 
 void is_flag_high()
