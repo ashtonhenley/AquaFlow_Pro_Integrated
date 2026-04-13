@@ -167,6 +167,7 @@ void idle_state(){
 		// Only read water level sensors if the reservoir lid is necessarily on (e.g. when the reservoir isn't being filled)
 		if(lids){
 			read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
+			res_full_flag = (sensorvalues.waterlevel_res < minimum_res_val);
 		}
 		// Need to check if these sensors values are out of range
 		//check_envir_flags();
