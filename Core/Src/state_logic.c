@@ -149,6 +149,8 @@ void idle_state(){
 		sample_temperature_sensors();
 		check_turbidity(&sensorvalues.turbidity_value);
 		read_ph(&sensorvalues.ph_value);
+		FAN_ON_TEMP = rangevalues.max_temp;
+		FAN_OFF_TEMP = rangevalues.max_temp - 2;
 		// Only read water level sensors if the reservoir lid is necessarily on (e.g. when the reservoir isn't being filled)
 		if(lids){
 			read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
