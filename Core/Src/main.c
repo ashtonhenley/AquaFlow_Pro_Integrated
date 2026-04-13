@@ -425,7 +425,7 @@ int main(void)
 							LCD_WriteString("RETRY!");
 						}
 						else { // Manipulate readKey for "manual bail-out" to go back through the menu for the same state, writing the newly assigned value to the screen's "CURRENT" field
-							menuState--; // "Pre-undo" forwards shift in menu
+							menuState = (menuState + 11) % 12; // "Pre-undo" forwards shift in menu
 							readKey = 'A';
 							break;
 						}

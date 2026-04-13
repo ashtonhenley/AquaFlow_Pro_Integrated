@@ -46,7 +46,7 @@ extern bool res_full_flag;
 static uint32_t fill_elapsed = 0;   // total pump runtime accumulated
 static uint32_t fill_start_sod = 0; // start time of the current run
 uint32_t delta = 0;			  // time elapsed since last check
-uint8_t flow_rate = 21;   // Time it takes to pump 1 gallon in seconds
+uint8_t flow_rate = 25;   // Time it takes to pump 1 gallon in seconds
 bool overheat = 0;
 
 float FAN_ON_TEMP;
@@ -87,8 +87,8 @@ void num_to_char_2(uint8_t num) { // Assumed: num < 100
 
 void num_to_char_trbdty(uint16_t num) { // For turbidity only - cap input integers > 100 at 99
 	if (num > 99) {
-		XX[0] = '9';
-		XX[1] = '9';
+		XX[0] = '!';
+		XX[1] = '!';
 		XX[2] = '\0';
 	}
 	else if (num < 10) {
@@ -315,7 +315,7 @@ void water_drain_state(){
 		// Get start time of outbound pump
 		drain_sod = get_seconds_of_day();
 		state_maintain();
-		keypadIter = 0;
+		keypadIter = 166;
 		estTime = 0;
 
 		state_maintain();
@@ -426,7 +426,7 @@ void water_fill_state(){
 	if (state_entry)
 	{
 		state_maintain();
-		keypadIter = 0;
+		keypadIter = 166;
 		estTime = 0;
 
 		// Set inbound pump & flag high
