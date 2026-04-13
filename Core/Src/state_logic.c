@@ -88,7 +88,8 @@ void num_to_char_2(uint8_t num) { // Assumed: num < 100
 void num_to_char_trbdty(uint16_t num) { // For turbidity only - cap input integers > 100 at 99
 	if (num > 99) {
 		XX[0] = '9';
-		XX[0] = '9';
+		XX[1] = '9';
+		XX[2] = '\0';
 	}
 	else if (num < 10) {
 		XX[0] = '0';
@@ -208,7 +209,6 @@ void idle_state(){
 		temp_buf[3] = XXdXX[3];
 		temp_buf[4] = XXdXX[4];
 		temp_buf[5] = '\0';
-		num_to_char_2(sensorvalues.turbidity_value);
 		num_to_char_4(sensorvalues.ph_value);
 		ph_buf[0] = XXdXX[0];
 		ph_buf[1] = XXdXX[1];
@@ -216,6 +216,7 @@ void idle_state(){
 		ph_buf[3] = XXdXX[3];
 		ph_buf[4] = XXdXX[4];
 		ph_buf[5] = '\0';
+		num_to_char_2(sensorvalues.turbidity_value);
 		LCD_ShowIdleOverview(temp_buf, XX, ph_buf);
 
 		menuExit = 0;
