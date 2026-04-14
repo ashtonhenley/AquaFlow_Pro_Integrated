@@ -259,12 +259,14 @@ void water_res_state(){
 		state_maintain();
 
 	}
-	else {
+	//else {
 		// Lids may not be on heading into routine for the first time; outside of this, read (e.g. to obtain new progress %)
 		if (lids) read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 		num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f)); // Percentage = 100 * level/30
 		LCD_ShowReservoirProgress(XX);
 
+		LCD_SendCommand(UNDERLINE_ON);
+		LCD_SendCommand(BLINK_ON);
 		LCD_SetCursor(60);
 		LCD_WriteString("#)CONFIRM ");
 
@@ -276,7 +278,7 @@ void water_res_state(){
 
 		lids = 1;
 
-		num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f));
+		read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 
 		while (sensorvalues.waterlevel_res >= minimum_res_val) {
 
@@ -292,7 +294,10 @@ void water_res_state(){
 			read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 		}
 
-	}
+	//}
+
+	LCD_SendCommand(UNDERLINE_OFF);
+	LCD_SendCommand(BLINK_OFF);
 
 	res_full_flag = 0;
 	current_state = AQUA_DRAIN_STATE;
