@@ -358,7 +358,7 @@ void water_drain_state(){
 		{
 			outbound_pump_low();
 
-			current_state = HEATING_STATE;
+			current_state = AQUA_FILL_STATE;
 			state_enter();
 		}
 	}
@@ -475,6 +475,7 @@ void water_fill_state(){
 	float diff = sensorvalues.temperature_res - sensorvalues.temperature_tank;
 
 	// If temp mismatch gets too large, pause filling and go back to heating
+	/*
 	if (diff < -1.0f)
 	{
 		overheat = 0;
@@ -502,6 +503,7 @@ void water_fill_state(){
 		return;
 
 	}
+	*/
 	// Continue fill checks
 	read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
 
