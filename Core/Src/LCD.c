@@ -181,7 +181,7 @@ void LCD_ShowReservoirProgress(const char* progress) {
 	LCD_SetCursor(40);
 	LCD_WriteString("CURRENT   ");
 	LCD_WriteString(progress);
-	LCD_WriteCharacter('%');
+	LCD_WriteCharacter(' cm');
 }
 
 void LCD_ShowDrainScreen(uint8_t estimate_seconds) {
