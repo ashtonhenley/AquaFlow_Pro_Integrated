@@ -262,7 +262,7 @@ void water_res_state(){
 	//else {
 		// Lids may not be on heading into routine for the first time; outside of this, read (e.g. to obtain new progress %)
 		if (lids) read_water_level(&sensorvalues.waterlevel_res, &sensorvalues.waterlevel_tank);
-		num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f)); // Percentage = 100 * level/30
+		num_to_char_2(sensorvalues.waterlevel_res); // Centimeters
 		LCD_ShowReservoirProgress(XX);
 
 		LCD_SendCommand(UNDERLINE_ON);
@@ -282,7 +282,7 @@ void water_res_state(){
 
 		while (sensorvalues.waterlevel_res >= minimum_res_val) {
 
-			num_to_char_2((uint8_t)((float)sensorvalues.waterlevel_res*3.3333f)); // Percentage = 100 * level/30
+			num_to_char_2(sensorvalues.waterlevel_res); // Percentage = 100 * level/30
 			LCD_ShowReservoirProgress(XX);
 			LCD_SetCursor(60);
 			LCD_WriteString("#)RETRY!  ");
