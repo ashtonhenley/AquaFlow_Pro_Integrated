@@ -27,7 +27,7 @@ OutOfRangeValues rangevalues =
 {
 	.max_temp = 80,
     .turbidity = 40,
-    .low_ph    = 6.5,
+    .low_ph    = 5.5,
     .high_ph   = 8.5
 };
 

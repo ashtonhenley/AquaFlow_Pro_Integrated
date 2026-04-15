@@ -346,7 +346,7 @@ int main(void)
 							if (!inputError) rangevalues.turbidity = inputNum;
 							break;
 						case 2:
-							inputError = (inputNum < 60 || inputNum > 70 || (uint8_t)(rangevalues.high_ph*10) - inputNum < 5);
+							inputError = (inputNum < 50 || inputNum > 70 || (uint8_t)(rangevalues.high_ph*10) - inputNum < 5);
 							if (!inputError) rangevalues.low_ph = inputNum;
 							break;
 						case 3:
