@@ -56,7 +56,7 @@ static bool inbound_pump_on = 0;
 
 const uint8_t minimum_tank_val = 12; // Distance between sensor and water once water has been drained
 const uint8_t maximum_tank_val = 2; // Distance between sensor and water once water has been pumped back into the tank
-const uint8_t minimum_res_val = 4; // Distance between sensor and water to allow for a water change to begin
+const uint8_t minimum_res_val = 6; // Distance between sensor and water to allow for a water change to begin
 
 extern uint8_t schedule;
 
