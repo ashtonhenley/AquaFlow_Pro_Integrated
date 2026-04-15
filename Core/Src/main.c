@@ -347,11 +347,11 @@ int main(void)
 							break;
 						case 2:
 							inputError = (inputNum < 50 || inputNum > 70 || (uint8_t)(rangevalues.high_ph*10) - inputNum < 5);
-							if (!inputError) rangevalues.low_ph = inputNum;
+							if (!inputError) rangevalues.low_ph = (float)inputNum/10;
 							break;
 						case 3:
 							inputError = (inputNum < 70 || inputNum > 85 || inputNum - (uint8_t)(rangevalues.low_ph*10) < 5);
-							if (!inputError) rangevalues.high_ph = inputNum;
+							if (!inputError) rangevalues.high_ph = (float)inputNum/10;
 							break;
 						case 4:
 							inputError = (inputNum < 3 || inputNum > 28);
