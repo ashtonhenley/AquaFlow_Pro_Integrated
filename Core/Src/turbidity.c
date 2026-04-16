@@ -10,16 +10,16 @@
 #include "turbidity.h"
 
 extern volatile uint16_t adc_buffer[2];
-
 void check_turbidity(uint16_t *turbidity)
 {
     uint16_t adc = adc_buffer[0];
 
-    float ntu_f = 5.0f * ((float)adc - 2140.0f);
+    // Multiply first to preserve precision
+    int32_t ntu = (100 * (2200 - (int32_t)adc)) / 600;
 
-    // Clamp range
-    if (ntu_f < 0.0f) ntu_f = 0.0f;
-    if (ntu_f > 100.0f) ntu_f = 100.0f;
+    // Clamp
+    if (ntu < 0) ntu = 0;
+    if (ntu > 100) ntu = 100;
 
-    *turbidity = (uint16_t)(ntu_f + 0.5f);
+    *turbidity = (uint16_t)ntu;
 }
