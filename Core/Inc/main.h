@@ -83,38 +83,24 @@ void Error_Handler(void);
 #define TMS_GPIO_Port GPIOA
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
+#define KEY_C1_Pin GPIO_PIN_9
+#define KEY_C1_GPIO_Port GPIOC
+#define KEY_C2_Pin GPIO_PIN_0
+#define KEY_C2_GPIO_Port GPIOD
+#define KEY_C3_Pin GPIO_PIN_1
+#define KEY_C3_GPIO_Port GPIOD
+#define KEY_C4_Pin GPIO_PIN_2
+#define KEY_C4_GPIO_Port GPIOD
+#define KEY_R1_Pin GPIO_PIN_3
+#define KEY_R1_GPIO_Port GPIOD
+#define KEY_R2_Pin GPIO_PIN_4
+#define KEY_R2_GPIO_Port GPIOD
+#define KEY_R3_Pin GPIO_PIN_5
+#define KEY_R3_GPIO_Port GPIOD
+#define KEY_R4_Pin GPIO_PIN_6
+#define KEY_R4_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
-#define B1_Pin GPIO_PIN_13
-#define B1_GPIO_Port GPIOC
-#define MCO_Pin GPIO_PIN_0
-#define MCO_GPIO_Port GPIOF
-#define USART2_TX_Pin GPIO_PIN_2
-#define USART2_TX_GPIO_Port GPIOA
-#define USART2_RX_Pin GPIO_PIN_3
-#define USART2_RX_GPIO_Port GPIOA
-#define LED_GREEN_Pin GPIO_PIN_5
-#define LED_GREEN_GPIO_Port GPIOA
-#define TMS_Pin GPIO_PIN_13
-#define TMS_GPIO_Port GPIOA
-#define TCK_Pin GPIO_PIN_14
-#define TCK_GPIO_Port GPIOA
-#define KEY_R4_Pin GPIO_PIN_9
-#define KEY_R4_GPIO_Port GPIOC
-#define KEY_R3_Pin GPIO_PIN_0
-#define KEY_R3_GPIO_Port GPIOD
-#define KEY_R2_Pin GPIO_PIN_1
-#define KEY_R2_GPIO_Port GPIOD
-#define KEY_R1_Pin GPIO_PIN_2
-#define KEY_R1_GPIO_Port GPIOD
-#define KEY_C4_Pin GPIO_PIN_3
-#define KEY_C4_GPIO_Port GPIOD
-#define KEY_C3_Pin GPIO_PIN_4
-#define KEY_C3_GPIO_Port GPIOD
-#define KEY_C2_Pin GPIO_PIN_5
-#define KEY_C2_GPIO_Port GPIOD
-#define KEY_C1_Pin GPIO_PIN_6
-#define KEY_C1_GPIO_Port GPIOD
 
 /* USER CODE END Private defines */
 

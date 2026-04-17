@@ -12,15 +12,8 @@ I2C_HandleTypeDef *_ds3231_ui2c;
 
 DateTimeStruct curr_date_time = {0};
 
-// Set scheduled date, will later be set by Interface.
-ScheduledWaterChange sched_date_time = {
-		.day = 10,
-		.month = 4,
-		.year = 26,
-		.minutes = 30,
-		.hours = 12,
-};
-
+// Scheduled water change date. To be rewritten at startup
+ScheduledWaterChange sched_date_time = {0};
 
 bool timer_expired(uint32_t start_sod, uint32_t runtime_s, uint8_t curr_hour, uint8_t curr_min, uint8_t curr_sec)
 	{

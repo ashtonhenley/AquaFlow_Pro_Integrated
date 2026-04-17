@@ -7,36 +7,20 @@
 #include "turbidity.h"
 #include "math.h"
 
-extern volatile uint16_t adc_buffer [2];
+#include "turbidity.h"
 
-void check_turbidity(uint16_t *turbidity){
+extern volatile uint16_t adc_buffer[2];
 
+void check_turbidity(uint16_t *turbidity)
+{
+    uint16_t adc = adc_buffer[0];
 
-	uint16_t adc = adc_buffer[0];
-	float voltage = turbidity_to_voltage(adc);
+    // Multiply first to preserve precision
+    int32_t ntu = (100 * (2200 - (int32_t)adc)) / 600;
 
-	// Clamp value, not possible to have a voltage greater than 3.3, so check low
-	if(voltage <= 0.01){
-		*turbidity = 2000;
-		return;
-	}
+    // Clamp
+    if (ntu < 0) ntu = 0;
+    if (ntu > 100) ntu = 100;
 
-
-	float ntu_f = (voltage - 1.5256)/(-0.0007);
-
-	// Clamp NTU
-	if(ntu_f < 0.0f) ntu_f = 0.0f;
-	if(ntu_f > 2000.0f) ntu_f = 2000.0f;
-
-	// Round.. adding 0.5 ensures we always round to next integer.
-	*turbidity = (int16_t)(ntu_f + 0.5f);
-
-
-}
-
-float turbidity_to_voltage(uint16_t adc_reading){
-
-	float voltage = (((float)adc_reading * 3.3) / 4095);
-
-	return voltage;
+    *turbidity = (uint16_t)ntu;
 }
