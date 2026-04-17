@@ -169,7 +169,7 @@ void idle_state(){
 			res_full_flag = (sensorvalues.waterlevel_res < minimum_res_val);
 		}
 		// Need to check if these sensors values are out of range
-		//check_envir_flags();
+		check_envir_flags();
 		is_flag_high();
 
 		// Check for a scheduled change
